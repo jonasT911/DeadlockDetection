@@ -6,28 +6,31 @@ public class functionAction {
 	String className;
 	String functionName;
 	ArrayList<String> passedArgs;
-	ArrayList<String> locksAcquired;
-	ArrayList<String> functionsCalled;
+	ArrayList<LockNode> locksAcquired;
+	ArrayList<calledFunctions> functionsCalled;
+	
+	boolean runnable=false;
 
-	public functionAction(String className, String functionName) {
+	public functionAction(String className, String functionName,boolean runnable) {
 		this.className = className;
 		this.functionName = functionName;
 		locksAcquired = new ArrayList<>();
 		functionsCalled = new ArrayList<>();
 		passedArgs = new ArrayList<>();
+		this.runnable =runnable;
 	}
 
-	public void addLock(String lockName) {
+	public void addLock(LockNode lockName) {
 		for (int i = 0; i < passedArgs.size(); i++) {
 			if (lockName.equals(passedArgs.get(i))) {
-				locksAcquired.add(i+"");
-				return;
+				lockName.lockName=i+"";
+			
 			}
 		}
 		locksAcquired.add(lockName);
 	}
 
-	public void addFunction(String function) {
+	public void addFunction(calledFunctions function) {
 		
 		functionsCalled.add(function);
 	}
