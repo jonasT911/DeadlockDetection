@@ -9,6 +9,7 @@ public class functionAction {
 	ArrayList<LockNode> locksAcquired;
 	ArrayList<calledFunctions> functionsCalled;
 	
+	boolean visited=false;
 	boolean runnable=false;
 
 	public functionAction(String className, String functionName,boolean runnable) {
@@ -22,9 +23,9 @@ public class functionAction {
 
 	public void addLock(LockNode lockName) {
 		for (int i = 0; i < passedArgs.size(); i++) {
-			if (lockName.equals(passedArgs.get(i))) {
-				lockName.lockName=i+"";
-			
+			if (lockName.lockName.equals(passedArgs.get(i))) {
+			//	lockName.lockName=i+"";
+			//This is necessary for passed arguments, but for now I dont want it.
 			}
 		}
 		locksAcquired.add(lockName);

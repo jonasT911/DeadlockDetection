@@ -34,6 +34,7 @@ public class master {
 				try {
 					File myObj = new File(contents[j]);
 					Scanner myReader = new Scanner(myObj);
+					locksCurrentlyHeld.clear();
 					while (myReader.hasNextLine()) {
 						String data = myReader.nextLine();// Note, this will need to be change to key off of ; and {
 															// and not \r
@@ -62,9 +63,16 @@ public class master {
 							openBrackets++;
 						}
 						if (data.contains("}")) {
+							
 							openBrackets--;
-							if (locksCurrentlyHeld.get(locksCurrentlyHeld.size() - 1).level <= openBrackets) {
-								locksCurrentlyHeld.remove(locksCurrentlyHeld.size() - 1);
+							System.out.println("brack "+openBrackets);
+							if (locksCurrentlyHeld.size() != 0) {
+								if (locksCurrentlyHeld.get(locksCurrentlyHeld.size() - 1).level >= openBrackets) {
+									LockNode temp=locksCurrentlyHeld.remove(locksCurrentlyHeld.size() - 1);
+									
+									System.out.println("Removing lock "+temp.lockName);
+									System.out.println(locksCurrentlyHeld.size());
+								}
 							}
 							if (openBrackets == 1) {
 
@@ -81,8 +89,10 @@ public class master {
 								locksCurrentlyHeld.get(x).heldLocks.add(newLock);
 							}
 
-							funct.addLock(newLock);
+							//funct.addLock(newLock);
 							locksCurrentlyHeld.add(newLock);
+							System.out.println("Adding new lock "+newLock.lockName+newLock.level);
+							System.out.println(locksCurrentlyHeld.size());
 						}
 						addFunctionCall(data, funct, false);
 
@@ -103,7 +113,9 @@ public class master {
 
 		for (int i = 0; i < thisProgram.size(); i++) {
 			System.out.println(thisProgram.get(i).className + "." + thisProgram.get(i).functionName);
-			System.out.println(thisProgram.get(i).locksAcquired);
+			for (int k = 0; k < thisProgram.get(i).locksAcquired.size(); k++) {
+			System.out.print(thisProgram.get(i).locksAcquired.get(k).lockName+", ");
+			}
 			System.out.print("[");
 			for (int k = 0; k < thisProgram.get(i).functionsCalled.size(); k++) {
 				System.out.print(thisProgram.get(i).functionsCalled.get(k).functionName + ", ");
@@ -151,8 +163,17 @@ public class master {
 		// name is found, replace it with the class.
 		// when lock name is same as existing lock node, add all held locks to the lcoks
 		// held list
-
+		traceExecution(SearchTree, thisProgram, new ArrayList<LockNode>(), mainFunction);// CHange later to use first
+																							// multithreaded function.
 		// Step 4 DFS to find cycles.
+		System.out.println("\n\nBegin Search Tree");
+		for (int i = 0; i < SearchTree.size(); i++) {
+			System.out.println(SearchTree.get(i).lockName);
+			for (int j = 0; j < SearchTree.get(i).heldLocks.size(); j++) {
+				System.out.print(SearchTree.get(i).heldLocks.get(j).lockName + ", ");
+			}
+			System.out.println();
+		}
 	}
 
 	static boolean isFunctionDefinition(String data, int openBrackets) {
@@ -229,21 +250,49 @@ public class master {
 		// relation graph.
 		// Find all functions called by the passed function.
 		// Recursively enter those functions while
-		locksHeld.addAll(currentFunction.locksAcquired);
-		for (int i = 0; i < currentFunction.locksAcquired.size(); i++) {
-			LockNode temp=currentFunction.locksAcquired.get(i);
-			temp.heldLocks.addAll(locksHeld);
-			SearchTree.add(temp);
+		System.out.println(currentFunction.functionName);
+	
+		if(currentFunction.visited) {
+			return;
 		}
-		
+		currentFunction.visited=true;
+		locksHeld.addAll(currentFunction.locksAcquired);
+		for(int i=0;i<locksHeld.size();i++) {
+			System.out.println(locksHeld.get(i).lockName);
+		}
+		for (int i = 0; i < currentFunction.locksAcquired.size(); i++) {
+
+			LockNode temp = currentFunction.locksAcquired.get(i);
+			int location = -1;
+			for (int j = 0; j < SearchTree.size(); j++) {
+				if (SearchTree.get(j).lockName.equals(temp.lockName)) {
+					location = j;
+				}
+			}
+
+			if (location != -1) {
+				SearchTree.get(location).heldLocks.addAll(locksHeld);
+				SearchTree.get(location).heldLocks.addAll(temp.heldLocks);
+			} else {
+
+				temp.heldLocks.addAll(locksHeld);
+				SearchTree.add(temp);
+			}
+		}
+
 		for (int i = 0; i < currentFunction.functionsCalled.size(); i++) {
 			int location = -1;
-			//for(int i)
-					program.indexOf(currentFunction.functionsCalled.get(i));
-			if (location!=-1) {
+			for (int j = 0; j < program.size(); j++) {
+				System.out.println(program.get(j).functionName+" "+(currentFunction.functionsCalled.get(i).functionName));
+				if (program.get(j).functionName.equals(currentFunction.functionsCalled.get(i).functionName)) {
+					location = j;
+				}
+			}
+
+			if (location != -1) {
 				traceExecution(SearchTree, program, locksHeld, program.get(location));
 			}
-			
+
 		}
 	}
 }
