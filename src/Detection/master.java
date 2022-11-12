@@ -56,7 +56,7 @@ public class master {
 
 							funct = new functionAction(currentClass, getFunctionName(data), runnable);
 							funct.setArgs(data.substring(data.indexOf('(') + 1, (data.indexOf(')'))));
-							funct.locksAcquired = locksCurrentlyHeld;
+							funct.locksAcquired .addAll( locksCurrentlyHeld);
 						}
 
 						if (data.contains("{")) {
@@ -65,17 +65,17 @@ public class master {
 						if (data.contains("}")) {
 							
 							openBrackets--;
-							System.out.println("brack "+openBrackets);
+						//	System.out.println("brack "+openBrackets);
 							if (locksCurrentlyHeld.size() != 0) {
 								if (locksCurrentlyHeld.get(locksCurrentlyHeld.size() - 1).level >= openBrackets) {
 									LockNode temp=locksCurrentlyHeld.remove(locksCurrentlyHeld.size() - 1);
 									
-									System.out.println("Removing lock "+temp.lockName);
-									System.out.println(locksCurrentlyHeld.size());
+								//	System.out.println("Removing lock "+temp.lockName);
+									//System.out.println(locksCurrentlyHeld.size());
 								}
 							}
 							if (openBrackets == 1) {
-
+								
 								thisProgram.add(funct);
 							}
 						}
@@ -89,7 +89,7 @@ public class master {
 								locksCurrentlyHeld.get(x).heldLocks.add(newLock);
 							}
 
-							//funct.addLock(newLock);
+							funct.addLock(newLock);
 							locksCurrentlyHeld.add(newLock);
 							System.out.println("Adding new lock "+newLock.lockName+newLock.level);
 							System.out.println(locksCurrentlyHeld.size());
@@ -116,6 +116,7 @@ public class master {
 			for (int k = 0; k < thisProgram.get(i).locksAcquired.size(); k++) {
 			System.out.print(thisProgram.get(i).locksAcquired.get(k).lockName+", ");
 			}
+			System.out.println("]");
 			System.out.print("[");
 			for (int k = 0; k < thisProgram.get(i).functionsCalled.size(); k++) {
 				System.out.print(thisProgram.get(i).functionsCalled.get(k).functionName + ", ");
@@ -194,7 +195,7 @@ public class master {
 			beginIndex--;
 			endIndex--;
 		}
-		while (data.charAt(beginIndex) != ' ') {
+		while (data.charAt(beginIndex) != ' '&&data.charAt(beginIndex) != '.') {
 			beginIndex--;
 
 		}
@@ -224,7 +225,7 @@ public class master {
 		// class.
 		int leftIndex = temp.indexOf('(') - 2;
 
-		while (leftIndex >= 0 && temp.charAt(leftIndex) != ' ') {
+		while (leftIndex >= 0 && temp.charAt(leftIndex) != ' '&&temp.charAt(leftIndex) != '.') {
 
 			leftIndex--;
 		}
@@ -250,16 +251,21 @@ public class master {
 		// relation graph.
 		// Find all functions called by the passed function.
 		// Recursively enter those functions while
+		System.out.println("RECURSIVE");
 		System.out.println(currentFunction.functionName);
 	
 		if(currentFunction.visited) {
 			return;
 		}
 		currentFunction.visited=true;
-		locksHeld.addAll(currentFunction.locksAcquired);
-		for(int i=0;i<locksHeld.size();i++) {
-			System.out.println(locksHeld.get(i).lockName);
+		ArrayList<LockNode> lockHeldThisLevel=new ArrayList<LockNode>();
+		lockHeldThisLevel.addAll(locksHeld);
+	
+		for(int i=0;i<currentFunction.locksAcquired.size();i++) {
+			System.out.println(currentFunction.locksAcquired.get(i).lockName+", ");
 		}
+		
+		//Add locks to search tree
 		for (int i = 0; i < currentFunction.locksAcquired.size(); i++) {
 
 			LockNode temp = currentFunction.locksAcquired.get(i);
@@ -275,22 +281,29 @@ public class master {
 				SearchTree.get(location).heldLocks.addAll(temp.heldLocks);
 			} else {
 
-				temp.heldLocks.addAll(locksHeld);
+				temp.heldLocks.addAll(lockHeldThisLevel);
+				System.out.println("ADD new node");
 				SearchTree.add(temp);
 			}
 		}
 
+		//Go to next functions
 		for (int i = 0; i < currentFunction.functionsCalled.size(); i++) {
 			int location = -1;
 			for (int j = 0; j < program.size(); j++) {
-				System.out.println(program.get(j).functionName+" "+(currentFunction.functionsCalled.get(i).functionName));
-				if (program.get(j).functionName.equals(currentFunction.functionsCalled.get(i).functionName)) {
+				//System.out.println(program.get(j).functionName+" "+(currentFunction.functionsCalled.get(i).functionName));
+				if (program.get(j).functionName.equals(currentFunction.functionsCalled.get(i).functionName)||
+						(program.get(j).functionName.equals("run")&&currentFunction.functionsCalled.get(i).functionName.equals("start"))//Does not factor in class TODO: Add that to the comparison.
+						) {
+					
 					location = j;
+					break;
 				}
 			}
 
 			if (location != -1) {
-				traceExecution(SearchTree, program, locksHeld, program.get(location));
+				lockHeldThisLevel.addAll(currentFunction.locksAcquired);
+				traceExecution(SearchTree, program, lockHeldThisLevel, program.get(location));
 			}
 
 		}

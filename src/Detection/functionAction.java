@@ -28,6 +28,7 @@ public class functionAction {
 			//This is necessary for passed arguments, but for now I dont want it.
 			}
 		}
+		System.out.println("add lock in function");
 		locksAcquired.add(lockName);
 	}
 
