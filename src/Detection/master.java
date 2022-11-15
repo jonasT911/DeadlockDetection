@@ -56,26 +56,26 @@ public class master {
 
 							funct = new functionAction(currentClass, getFunctionName(data), runnable);
 							funct.setArgs(data.substring(data.indexOf('(') + 1, (data.indexOf(')'))));
-							funct.locksAcquired .addAll( locksCurrentlyHeld);
+							//funct.locksAcquired.addAll(locksCurrentlyHeld);
 						}
 
 						if (data.contains("{")) {
 							openBrackets++;
 						}
 						if (data.contains("}")) {
-							
+
 							openBrackets--;
-						//	System.out.println("brack "+openBrackets);
+							// System.out.println("brack "+openBrackets);
 							if (locksCurrentlyHeld.size() != 0) {
 								if (locksCurrentlyHeld.get(locksCurrentlyHeld.size() - 1).level >= openBrackets) {
-									LockNode temp=locksCurrentlyHeld.remove(locksCurrentlyHeld.size() - 1);
-									
-								//	System.out.println("Removing lock "+temp.lockName);
-									//System.out.println(locksCurrentlyHeld.size());
+									locksCurrentlyHeld.remove(locksCurrentlyHeld.size() - 1);
+
+									// System.out.println("Removing lock "+temp.lockName);
+									// System.out.println(locksCurrentlyHeld.size());
 								}
 							}
 							if (openBrackets == 1) {
-								
+
 								thisProgram.add(funct);
 							}
 						}
@@ -91,7 +91,7 @@ public class master {
 
 							funct.addLock(newLock);
 							locksCurrentlyHeld.add(newLock);
-							System.out.println("Adding new lock "+newLock.lockName+newLock.level);
+							System.out.println("Adding new lock " + newLock.lockName + newLock.level);
 							System.out.println(locksCurrentlyHeld.size());
 						}
 						addFunctionCall(data, funct, false);
@@ -114,7 +114,7 @@ public class master {
 		for (int i = 0; i < thisProgram.size(); i++) {
 			System.out.println(thisProgram.get(i).className + "." + thisProgram.get(i).functionName);
 			for (int k = 0; k < thisProgram.get(i).locksAcquired.size(); k++) {
-			System.out.print(thisProgram.get(i).locksAcquired.get(k).lockName+", ");
+				System.out.print(thisProgram.get(i).locksAcquired.get(k).lockName + ", ");
 			}
 			System.out.println("]");
 			System.out.print("[");
@@ -169,12 +169,44 @@ public class master {
 		// Step 4 DFS to find cycles.
 		System.out.println("\n\nBegin Search Tree");
 		for (int i = 0; i < SearchTree.size(); i++) {
-			System.out.println(SearchTree.get(i).lockName);
+			System.out.println(SearchTree.get(i).lockName+" "+SearchTree.get(i));
 			for (int j = 0; j < SearchTree.get(i).heldLocks.size(); j++) {
-				System.out.print(SearchTree.get(i).heldLocks.get(j).lockName + ", ");
+				System.out.print(SearchTree.get(i).heldLocks.get(j).lockName +" "+SearchTree.get(i).heldLocks.get(j)+ ", ");
 			}
 			System.out.println();
 		}
+
+		ArrayList<LockNode> visited = new ArrayList<LockNode>();
+		ArrayList<LockNode> recList = new ArrayList<LockNode>();
+		if (isCycle(SearchTree.get(0), visited, recList)) {
+			System.out.println("DEADLOCK FOUND!!!!!");
+		}
+
+	}
+
+	static boolean isCycle(LockNode next, ArrayList<LockNode> visited, ArrayList<LockNode> recList) {
+		System.out.println("Node examined is " + next.lockName);
+		if (!visited.contains(next)) {
+
+			visited.add(next);
+			recList.add(next);// Change to look for string of same name
+			// Or put the correct node in the held nodes list
+			for (int i = 0; i < next.heldLocks.size(); i++) {
+				System.out.println(next.heldLocks.get(i).lockName + " Examine");
+				if (recList.contains(next.heldLocks.get(i))) {
+					System.out.println("Found Result");
+					return true;
+				} else {
+					if (isCycle(next.heldLocks.get(i), visited, recList)) {
+						return true;
+					}
+				}
+			}
+		}
+		System.out.println("Failure");
+		recList.remove(next);
+		return false;
+
 	}
 
 	static boolean isFunctionDefinition(String data, int openBrackets) {
@@ -195,7 +227,7 @@ public class master {
 			beginIndex--;
 			endIndex--;
 		}
-		while (data.charAt(beginIndex) != ' '&&data.charAt(beginIndex) != '.') {
+		while (data.charAt(beginIndex) != ' ' && data.charAt(beginIndex) != '.') {
 			beginIndex--;
 
 		}
@@ -225,7 +257,7 @@ public class master {
 		// class.
 		int leftIndex = temp.indexOf('(') - 2;
 
-		while (leftIndex >= 0 && temp.charAt(leftIndex) != ' '&&temp.charAt(leftIndex) != '.') {
+		while (leftIndex >= 0 && temp.charAt(leftIndex) != ' ' && temp.charAt(leftIndex) != '.') {
 
 			leftIndex--;
 		}
@@ -253,19 +285,18 @@ public class master {
 		// Recursively enter those functions while
 		System.out.println("RECURSIVE");
 		System.out.println(currentFunction.functionName);
-	
-		if(currentFunction.visited) {
+
+		if (currentFunction.visited) {
 			return;
 		}
-		currentFunction.visited=true;
-		ArrayList<LockNode> lockHeldThisLevel=new ArrayList<LockNode>();
-		lockHeldThisLevel.addAll(locksHeld);
+		currentFunction.visited = true;
 	
-		for(int i=0;i<currentFunction.locksAcquired.size();i++) {
-			System.out.println(currentFunction.locksAcquired.get(i).lockName+", ");
+
+		for (int i = 0; i < currentFunction.locksAcquired.size(); i++) {
+			System.out.print(currentFunction.locksAcquired.get(i).lockName + ", ");
 		}
-		
-		//Add locks to search tree
+		System.out.println();
+		// Add locks to search tree
 		for (int i = 0; i < currentFunction.locksAcquired.size(); i++) {
 
 			LockNode temp = currentFunction.locksAcquired.get(i);
@@ -277,33 +308,46 @@ public class master {
 			}
 
 			if (location != -1) {
+				System.out.println("A;ready found "+temp.lockName);
 				SearchTree.get(location).heldLocks.addAll(locksHeld);
-				SearchTree.get(location).heldLocks.addAll(temp.heldLocks);
+				for(int k=0;k<temp.heldLocks.size();k++) {
+					for (int j = 0; j < SearchTree.size(); j++) {
+						if (SearchTree.get(j).lockName.equals(temp.heldLocks.get(k).lockName)) {
+							SearchTree.get(location).heldLocks.add(SearchTree.get(j));
+						}else {
+							SearchTree.get(location).heldLocks.add(temp.heldLocks.get(k));
+						}
+					}
+				}
+				//SearchTree.get(location).heldLocks.addAll(temp.heldLocks);
 			} else {
 
-				temp.heldLocks.addAll(lockHeldThisLevel);
-				System.out.println("ADD new node");
+				temp.heldLocks.addAll(locksHeld);
+				System.out.println("ADD new node "+temp.lockName);
 				SearchTree.add(temp);
 			}
 		}
 
-		//Go to next functions
+		// Go to next functions
 		for (int i = 0; i < currentFunction.functionsCalled.size(); i++) {
 			int location = -1;
 			for (int j = 0; j < program.size(); j++) {
-				//System.out.println(program.get(j).functionName+" "+(currentFunction.functionsCalled.get(i).functionName));
-				if (program.get(j).functionName.equals(currentFunction.functionsCalled.get(i).functionName)||
-						(program.get(j).functionName.equals("run")&&currentFunction.functionsCalled.get(i).functionName.equals("start"))//Does not factor in class TODO: Add that to the comparison.
-						) {
-					
+				// System.out.println(program.get(j).functionName+"
+				// "+(currentFunction.functionsCalled.get(i).functionName));
+				if (program.get(j).functionName.equals(currentFunction.functionsCalled.get(i).functionName)
+						|| (program.get(j).functionName.equals("run")
+								&& currentFunction.functionsCalled.get(i).functionName.equals("start"))) {
+					// Does not factor in class 
+					//TODO: Add that to the comparison.
 					location = j;
 					break;
 				}
 			}
 
 			if (location != -1) {
-				lockHeldThisLevel.addAll(currentFunction.locksAcquired);
-				traceExecution(SearchTree, program, lockHeldThisLevel, program.get(location));
+				locksHeld.addAll(currentFunction.locksAcquired);
+				traceExecution(SearchTree, program, locksHeld, program.get(location));
+				locksHeld.removeAll(currentFunction.locksAcquired);
 			}
 
 		}
