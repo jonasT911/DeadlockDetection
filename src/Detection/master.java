@@ -16,6 +16,7 @@ public class master {
 		functionAction mainFunction = new functionAction("Fake", "Fake", false);
 		ArrayList<String> classList = new ArrayList<String>();
 		String currentClass = "";
+		int lineNumber = 0;
 
 		ArrayList<LockNode> locksCurrentlyHeld = new ArrayList<LockNode>();
 
@@ -35,7 +36,9 @@ public class master {
 					File myObj = new File(contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
+					lineNumber = 0;
 					while (myReader.hasNextLine()) {
+						lineNumber++;
 						String data = myReader.nextLine();// Note, this will need to be change to key off of ; and {
 															// and not \r
 						int commentIndex = data.indexOf("//");
@@ -56,7 +59,7 @@ public class master {
 
 							funct = new functionAction(currentClass, getFunctionName(data), runnable);
 							funct.setArgs(data.substring(data.indexOf('(') + 1, (data.indexOf(')'))));
-							//funct.locksAcquired.addAll(locksCurrentlyHeld);
+							// funct.locksAcquired.addAll(locksCurrentlyHeld);
 						}
 
 						if (data.contains("{")) {
@@ -81,7 +84,7 @@ public class master {
 						}
 						if (data.contains("synchronized")) {
 							String temp = data.substring(data.indexOf('(') + 1, data.indexOf(')'));
-							LockNode newLock = new LockNode(temp, openBrackets);
+							LockNode newLock = new LockNode(temp, openBrackets, contents[j], lineNumber);
 							// newLock.heldLocks=locksCurrentlyHeld;//Change to add new lock lists on the
 							// locks currently held.
 
@@ -169,9 +172,10 @@ public class master {
 		// Step 4 DFS to find cycles.
 		System.out.println("\n\nBegin Search Tree");
 		for (int i = 0; i < SearchTree.size(); i++) {
-			System.out.println(SearchTree.get(i).lockName+" "+SearchTree.get(i));
+			System.out.println(SearchTree.get(i).lockName + " " + SearchTree.get(i));
 			for (int j = 0; j < SearchTree.get(i).heldLocks.size(); j++) {
-				System.out.print(SearchTree.get(i).heldLocks.get(j).lockName +" "+SearchTree.get(i).heldLocks.get(j)+ ", ");
+				System.out.print(
+						SearchTree.get(i).heldLocks.get(j).lockName + " " + SearchTree.get(i).heldLocks.get(j) + ", ");
 			}
 			System.out.println();
 		}
@@ -182,6 +186,9 @@ public class master {
 			System.out.println("DEADLOCK FOUND!!!!!");
 		}
 
+		for (int i = 0; i < recList.size(); i++) {
+			System.out.println("Lock " + recList.get(i).lockName + " at " + recList.get(i).lockLocation);
+		}
 	}
 
 	static boolean isCycle(LockNode next, ArrayList<LockNode> visited, ArrayList<LockNode> recList) {
@@ -189,8 +196,7 @@ public class master {
 		if (!visited.contains(next)) {
 
 			visited.add(next);
-			recList.add(next);// Change to look for string of same name
-			// Or put the correct node in the held nodes list
+			recList.add(next);
 			for (int i = 0; i < next.heldLocks.size(); i++) {
 				System.out.println(next.heldLocks.get(i).lockName + " Examine");
 				if (recList.contains(next.heldLocks.get(i))) {
@@ -276,6 +282,12 @@ public class master {
 		addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
 	}
 
+	
+	/*
+	 * This function recursively traverses through the code starting at the first multithreaded call to run a thread.
+	 * It gets all the lock acquired and adds them to a search tree such that locks on the same object are the same node.
+	 * After that the code examines all the functions that were called by the current function.
+	 */
 	static void traceExecution(ArrayList<LockNode> SearchTree, ArrayList<functionAction> program,
 			ArrayList<LockNode> locksHeld, functionAction currentFunction) {// Pass list of functions, an arraylist of
 																			// locks held while going into this function
@@ -290,7 +302,6 @@ public class master {
 			return;
 		}
 		currentFunction.visited = true;
-	
 
 		for (int i = 0; i < currentFunction.locksAcquired.size(); i++) {
 			System.out.print(currentFunction.locksAcquired.get(i).lockName + ", ");
@@ -306,27 +317,32 @@ public class master {
 					location = j;
 				}
 			}
-
 			if (location != -1) {
-				System.out.println("A;ready found "+temp.lockName);
+				//Lock is already in tree
+				//update the node
+				System.out.println("Already found " + temp.lockName+" with size "+temp.heldLocks.size());
 				SearchTree.get(location).heldLocks.addAll(locksHeld);
-				for(int k=0;k<temp.heldLocks.size();k++) {
+				SearchTree.get(location).lockLocation=SearchTree.get(location).lockLocation+" and "+temp.lockLocation;
+				for (int k = 0; k < temp.heldLocks.size(); k++) {
 					for (int j = 0; j < SearchTree.size(); j++) {
 						if (SearchTree.get(j).lockName.equals(temp.heldLocks.get(k).lockName)) {
+							System.out.println("Add from search tree "+temp.heldLocks.get(k).lockName);
+							SearchTree.get(j).lockLocation=SearchTree.get(j).lockLocation;
 							SearchTree.get(location).heldLocks.add(SearchTree.get(j));
-						}else {
+						} else {
+							System.out.println("add new temp "+temp.heldLocks.get(k).lockName);
 							SearchTree.get(location).heldLocks.add(temp.heldLocks.get(k));
 						}
 					}
 				}
-				//SearchTree.get(location).heldLocks.addAll(temp.heldLocks);
+				// SearchTree.get(location).heldLocks.addAll(temp.heldLocks);
 			} else {
-
+				//add a new node to the spanning tree.
 				temp.heldLocks.addAll(locksHeld);
-				System.out.println("ADD new node "+temp.lockName);
+				System.out.println("ADD new node " + temp.lockName);
 				SearchTree.add(temp);
 			}
-		}
+		}//End lock for loop
 
 		// Go to next functions
 		for (int i = 0; i < currentFunction.functionsCalled.size(); i++) {
@@ -337,8 +353,8 @@ public class master {
 				if (program.get(j).functionName.equals(currentFunction.functionsCalled.get(i).functionName)
 						|| (program.get(j).functionName.equals("run")
 								&& currentFunction.functionsCalled.get(i).functionName.equals("start"))) {
-					// Does not factor in class 
-					//TODO: Add that to the comparison.
+					// Does not factor in class
+					// TODO: Add that to the comparison.
 					location = j;
 					break;
 				}

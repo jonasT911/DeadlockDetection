@@ -6,6 +6,7 @@ public class MainFile implements Runnable {
 
 	static Object lock1 = new Object();
 	static Object lock2 = new Object();
+	static Object testLock = new Object();
 	final int repetitions=10000;
 
 	
