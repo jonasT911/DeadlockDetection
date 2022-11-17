@@ -22,10 +22,5 @@ ArrayList<lockEdge> edges;
 		locksAcquiredWithin=new ArrayList<LockNode>();
 		edges=new ArrayList<lockEdge>();
 	}
-	
-	public void addEdge(String startName, String startLocation,LockNode end) {
-		
-		lockEdge temp=new lockEdge(startName, end.lockName, startLocation, end.lockLocation);
-		edges.add(temp);
-	}
+
 }
