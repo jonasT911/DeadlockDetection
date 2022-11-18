@@ -17,9 +17,11 @@ public class MainFile implements Runnable {
 	public void foo(Object A, Object B) {
 		synchronized (A) {
 			synchronized (B) {
-				for (int i = 0; i < repetitions; i++) {
-					sum++;
+				synchronized (c) {
+					for (int i = 0; i < repetitions; i++) {
+						sum++;
 
+					}
 				}
 			}
 		}

@@ -24,7 +24,15 @@ public class master {
 		// STEP 1: Create list of all functions, as well as the functions called and the
 		// locks acquired.
 		ArrayList<functionAction> thisProgram = new ArrayList<functionAction>();
-		File directoryPath = new File(System.getProperty("user.dir"));
+		System.out.println(System.getProperty("user.dir")+"\\..\\DeadlockDetection");
+		
+		String path;
+		if(args.length==0) {
+			path="";
+		}else {
+			path=args[0];
+		}
+		File directoryPath = new File(System.getProperty("user.dir")+"\\"+path);
 		// List of all files and directories
 		String contents[] = directoryPath.list();
 		for (int j = 0; j < contents.length; j++) {
