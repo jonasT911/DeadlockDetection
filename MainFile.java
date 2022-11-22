@@ -27,8 +27,8 @@ public class MainFile implements Runnable {
 	}
 
 	public void bar(Object A, Object B) {
-		synchronized (B) {
-			synchronized (A) {
+		synchronized ( B) {
+			synchronized ( A) {
 				for (int i = 0; i < repetitions; i++) {
 					sum--
 					;

@@ -80,7 +80,8 @@ public class master {
 								hasMoreLines = false;
 							}
 						}
-						
+						 data = data.replace("\n", " ");
+						 data = data.replace("\t", " ");
 					/*while(myReader.hasNextLine()) {
 						String data=myReader.nextLine();
 						*/
