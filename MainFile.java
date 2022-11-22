@@ -1,28 +1,28 @@
 package DeadlockPackage;
 
-
 public class MainFile implements Runnable {
 	private static int sum = 0;
 
 	static Object lock1 = new Object();
 	static Object lock2 = new Object();
-	final int repetitions=10000;
+	final int repetitions = 10000;
 
-	
-	public void garbage(Object A, Object B) {
-		synchronized (A) {
-		foo(A,B);
+	public void garbage(Object A, Object B) 
+	{
+		synchronized (A)
+		{
+			foo(A, B);
 		}
 	}
-	
+
 	public void foo(Object A, Object B) {
-	
-			synchronized (B) {
-				for (int i = 0; i < repetitions; i++) {
-					sum++;
-				
-				}
-			
+
+		synchronized (B) {
+			for (int i = 0; i < repetitions; i++) {
+				sum++;
+
+			}
+
 		}
 	}
 
@@ -30,8 +30,9 @@ public class MainFile implements Runnable {
 		synchronized (B) {
 			synchronized (A) {
 				for (int i = 0; i < repetitions; i++) {
-					sum--;
-			
+					sum--
+					;
+
 				}
 			}
 		}
@@ -46,9 +47,10 @@ public class MainFile implements Runnable {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		
+
 		for (int x = 0; x < 2; x++) {
-			garbage(lock1, lock2);
+			garbage(lock1,
+					lock2);
 			bar(lock1, lock2);
 		}
 		System.out.println(getSum(lock1));

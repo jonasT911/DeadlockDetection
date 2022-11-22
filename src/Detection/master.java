@@ -24,25 +24,25 @@ public class master {
 		// STEP 1: Create list of all functions, as well as the functions called and the
 		// locks acquired.
 		ArrayList<functionAction> thisProgram = new ArrayList<functionAction>();
-		
+
 		String path;
-		if(args.length==0) {
-			path="";
-		}else {
-			path="\\"+args[0];
+		if (args.length == 0) {
+			path = "";
+		} else {
+			path = "\\" + args[0];
 		}
-		System.out.println(System.getProperty("user.dir")+path);
-		File directoryPath = new File(System.getProperty("user.dir")+path);
-		
+		System.out.println(System.getProperty("user.dir") + path);
+		File directoryPath = new File(System.getProperty("user.dir") + path);
+
 		// List of all files and directories
-		if(directoryPath==null) {
+		if (directoryPath == null) {
 			System.out.println("directory is null somehow.");
 		}
-		if(!directoryPath.isDirectory()) {
+		if (!directoryPath.isDirectory()) {
 			System.out.println("The passed path does not lead to a directory");
 		}
 		String contents[] = directoryPath.list();
-		if(contents==null) {
+		if (contents == null) {
 			System.out.println("Listing did not work");
 		}
 		for (int j = 0; j < contents.length; j++) {
@@ -55,14 +55,36 @@ public class master {
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
-					while (myReader.hasNextLine()) {
-						lineNumber++;
-						String data = myReader.nextLine();// Note, this will need to be change to key off of ; and {
+					boolean hasMoreLines = true;
+					
+					
+					while (hasMoreLines) {
+						String data = "";
+						while (!data.contains(";") && !data.contains("{") && !data.contains("}")&&hasMoreLines) {
+							if (myReader.hasNextLine()) {
+								String temp;
+
+								lineNumber++;
+								temp = myReader.nextLine();// Note, this will need to be change to key off of ; and {
 															// and not \r
-						int commentIndex = data.indexOf("//");
-						if (commentIndex != -1) {
-							data = data.substring(0, commentIndex);
+							//	System.out.println(temp + "pre temp");
+								int commentIndex = temp.indexOf("//");
+								if (commentIndex != -1) {
+									temp = temp.substring(0, commentIndex);
+								}
+							//	System.out.println(temp + "was temp");
+								data = data.concat(temp);
+							
+							} else {
+								//System.out.println("End file reading");
+								hasMoreLines = false;
+							}
 						}
+						
+					/*while(myReader.hasNextLine()) {
+						String data=myReader.nextLine();
+						*/
+						//System.out.println("|"+data+"|");
 						String tempClass = getClassName(data, runnable);
 						if (tempClass != null) {
 							currentClass = tempClass;
@@ -122,7 +144,7 @@ public class master {
 
 						// System.out.println(data);
 
-					}
+					} // File reading while loop end
 					myReader.close();
 				} catch (FileNotFoundException e) {
 					System.out.println("An error occurred.");
@@ -147,14 +169,14 @@ public class master {
 //				System.out.print(thisProgram.get(i).functionsCalled.get(k).functionName + ", ");
 //			}
 //			System.out.println("]");
-//			System.out.println(thisProgram.get(i).passedArgs);
+//			System.out.println("Passed args are "+thisProgram.get(i).passedArgs);
 //			System.out.println(thisProgram.get(i).runnable);
 //
 //		}
 
 		// Step 2
-		//Removed
-		
+		// Removed
+
 		// Step 3 Starting at main, find every place where run is called on a runnable
 		// class.
 		// From there add all the locks taken into a directed graph such that a lock
@@ -179,9 +201,10 @@ public class master {
 //			}
 //			System.out.println("\n");
 //		}
-	
+
 		ArrayList<LockNode> visited = new ArrayList<LockNode>();
 		ArrayList<LockNode> recList = new ArrayList<LockNode>();
+		if(SearchTree.size()>=2) {
 		if (isCycle(SearchTree.get(1), visited, recList)) {
 			System.out.println("DEADLOCK FOUND!!!!!");
 
@@ -200,7 +223,7 @@ public class master {
 					System.out.println(listOfEdges.get(l));
 				}
 			}
-		}
+		}}
 		System.out.println("Finished");
 
 	}
@@ -313,7 +336,7 @@ public class master {
 		// relation graph.
 		// Find all functions called by the passed function.
 		// Recursively enter those functions while
-		
+
 //		System.out.println("\nRECURSIVE START");
 //		System.out.println(currentFunction.functionName);
 //		System.out.println(locksHeld);
@@ -342,7 +365,8 @@ public class master {
 			if (location != -1) {
 				// Lock is already in tree
 				// update the node
-			//System.out.println("Already found " + temp.lockName + " with size " + temp.locksAcquiredWithin.size());
+				// System.out.println("Already found " + temp.lockName + " with size " +
+				// temp.locksAcquiredWithin.size());
 
 				SearchTree.get(location).lockLocation = SearchTree.get(location).lockLocation; // + " and "+
 																								// temp.lockLocation;//
@@ -355,7 +379,8 @@ public class master {
 					for (int j = 0; j < SearchTree.size(); j++) {// Check if the held lock is in the tree
 						if (SearchTree.get(j).lockName.equals(temp.locksAcquiredWithin.get(k).lockName)) {
 							// Held lock matches a node in the tree.
-						//	System.out.println("Add held from search tree " + temp.locksAcquiredWithin.get(k).lockName);
+							// System.out.println("Add held from search tree " +
+							// temp.locksAcquiredWithin.get(k).lockName);
 							found = true;
 							// Add the object from the tree
 							SearchTree.get(location).locksAcquiredWithin.add(SearchTree.get(j));
@@ -364,7 +389,8 @@ public class master {
 					}
 					if (!found) {
 
-						//System.out.println("add new held temp " + temp.locksAcquiredWithin.get(k).lockName);
+						// System.out.println("add new held temp " +
+						// temp.locksAcquiredWithin.get(k).lockName);
 
 						// Otherwise add a new object to the held lock list
 						SearchTree.get(location).locksAcquiredWithin.add(temp.locksAcquiredWithin.get(k));
@@ -373,7 +399,8 @@ public class master {
 				locksAddedThisCycle.add(SearchTree.get(location));
 				// Add the old lock to the locks acquired for all currently held locks
 				for (int k = 0; k < locksHeld.size(); k++) {
-					//System.out.println("ADD " + SearchTree.get(location).lockName + " to " + locksHeld.get(k).lockName);
+					// System.out.println("ADD " + SearchTree.get(location).lockName + " to " +
+					// locksHeld.get(k).lockName);
 					locksHeld.get(k).locksAcquiredWithin.add(SearchTree.get(location));
 
 				}
@@ -385,7 +412,7 @@ public class master {
 				for (int k = 0; k < locksHeld.size(); k++) {
 					temp.locksAcquiredWithin.add(locksHeld.get(k));
 				}
-			//	System.out.println("ADD new node " + temp.lockName);
+				// System.out.println("ADD new node " + temp.lockName);
 
 				for (int k = 0; k < locksHeld.size(); k++) {
 					locksHeld.get(k).locksAcquiredWithin.add(temp);
