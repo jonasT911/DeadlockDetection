@@ -29,7 +29,7 @@ ArrayList<lockEdge> edges;
 
 	
 	public String toString() {
-		return "Lock " + lockName +" at " + lockLocation+ " hash: " + this.hashCode();
+		return "Lock: " + lockName +" lock_object: "+lockObj+" hash: " + this.hashCode();
 
 	}
 }

@@ -6,6 +6,7 @@ public class functionAction {
 	String className;
 	String functionName;
 	ArrayList<String> passedArgs;
+	ArrayList<String> argsMapping;
 	ArrayList<LockNode> locksAcquired;
 	ArrayList<calledFunctions> functionsCalled;
 	ArrayList<lockEdge> edgesMade;
@@ -19,6 +20,7 @@ public class functionAction {
 		locksAcquired = new ArrayList<>();
 		functionsCalled = new ArrayList<>();
 		passedArgs = new ArrayList<>();
+		argsMapping = new ArrayList<>();
 		this.runnable =runnable;
 		edgesMade=new ArrayList<lockEdge>();
 	}
@@ -38,8 +40,23 @@ public class functionAction {
 		
 		functionsCalled.add(function);
 	}
+	
+	public void updatePropagatedArgs(functionAction currentFunction) {
+		for(int i=0; i<passedArgs.size();i++) {
+			for(int j=0; j<currentFunction.argsMapping.size();j++) {
+				if(passedArgs.get(i).equals(currentFunction.argsMapping.get(j))) {
+					System.out.println("Swap args "+currentFunction.passedArgs.get(i)+ " and "+passedArgs.get(i));
+				//	passedArgs.remove(i);
+					passedArgs.set(i,currentFunction.passedArgs.get(i));
+					
+				}
+			}
+		}
+	}
 
 	public void setArgs(String args) {
+		argsMapping=passedArgs;
+		passedArgs = new ArrayList<>();
 		String temp = args.replace("  ", " ");
 		temp = temp.replace("\t", "");
 	
@@ -59,4 +76,6 @@ public class functionAction {
 		}
 		passedArgs.add(temp.substring(1+ temp.indexOf(' ')));
 	}
+	
+
 }
