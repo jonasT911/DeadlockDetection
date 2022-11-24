@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class LockNode {
 String lockName;
+String lockObj;
 String lockLocation;
 int level;
 ArrayList<LockNode> locksAcquiredWithin;
@@ -15,6 +16,7 @@ ArrayList<lockEdge> edges;
 		lockLocation="Undefined";
 		locksAcquiredWithin=new ArrayList<LockNode>();
 		edges=new ArrayList<lockEdge>();
+		lockObj=lockName; 
 	}
 	public LockNode(String name, int level,String fileLocation,int lineNumber) {
 		lockName= name.replace(" ", "");
@@ -22,6 +24,12 @@ ArrayList<lockEdge> edges;
 		this.level=level;
 		locksAcquiredWithin=new ArrayList<LockNode>();
 		edges=new ArrayList<lockEdge>();
+		lockObj=lockName; 
 	}
 
+	
+	public String toString() {
+		return "Lock " + lockName +" at " + lockLocation+ " hash: " + this.hashCode();
+
+	}
 }
