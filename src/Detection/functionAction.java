@@ -6,8 +6,10 @@ public class functionAction {
 	String className;
 	String functionName;
 	ArrayList<String> passedArgs;
+	ArrayList<String> argsMapping;
 	ArrayList<LockNode> locksAcquired;
 	ArrayList<calledFunctions> functionsCalled;
+	ArrayList<lockEdge> edgesMade;
 	
 	boolean visited=false;
 	boolean runnable=false;
@@ -18,17 +20,19 @@ public class functionAction {
 		locksAcquired = new ArrayList<>();
 		functionsCalled = new ArrayList<>();
 		passedArgs = new ArrayList<>();
+		argsMapping = new ArrayList<>();
 		this.runnable =runnable;
+		edgesMade=new ArrayList<lockEdge>();
 	}
 
 	public void addLock(LockNode lockName) {
 		for (int i = 0; i < passedArgs.size(); i++) {
 			if (lockName.lockName.equals(passedArgs.get(i))) {
-			//	lockName.lockName=i+"";
+				lockName.lockObj=i+"";
 			//This is necessary for passed arguments, but for now I dont want it.
 			}
 		}
-		//System.out.println("add lock in function");
+		System.out.println("add lock in function "+lockName.lockName);
 		locksAcquired.add(lockName);
 	}
 
@@ -36,13 +40,34 @@ public class functionAction {
 		
 		functionsCalled.add(function);
 	}
+	
+	public void updatePropagatedArgs(functionAction currentFunction) {
+		for(int i=0; i<passedArgs.size();i++) {
+			for(int j=0; j<currentFunction.argsMapping.size();j++) {
+				if(passedArgs.get(i).equals(currentFunction.argsMapping.get(j))) {
+					System.out.println("Swap args "+currentFunction.passedArgs.get(i)+ " and "+passedArgs.get(i));
+				//	passedArgs.remove(i);
+					passedArgs.set(i,currentFunction.passedArgs.get(i));
+					
+				}
+			}
+		}
+	}
 
 	public void setArgs(String args) {
+		argsMapping=passedArgs;
+		passedArgs = new ArrayList<>();
 		String temp = args.replace("  ", " ");
 		temp = temp.replace("\t", "");
 	
 		while (temp.indexOf(',') != -1) {
-			passedArgs.add(temp.substring(temp.indexOf(' ')+1, temp.indexOf(',')));
+			String 	addString=temp.substring(0, temp.indexOf(','));
+			System.out.println(addString);
+			if(addString.contains(" ")) {
+			addString=temp.substring(temp.indexOf(' ')+1, temp.indexOf(','));
+	
+			}
+			passedArgs.add(addString);
 			temp = temp.substring(temp.indexOf(',') + 1);
 		}
 		temp = temp.substring(temp.indexOf(',') + 1);
@@ -51,4 +76,6 @@ public class functionAction {
 		}
 		passedArgs.add(temp.substring(1+ temp.indexOf(' ')));
 	}
+	
+
 }
