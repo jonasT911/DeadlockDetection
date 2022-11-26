@@ -7,9 +7,12 @@ public class MainFile implements Runnable {
 	static Object lock2 = new Object();
 	final int repetitions = 10000;
 
-	public void garbage(Object A, Object B) {
-		synchronized (A) {
-			foo(A, B);
+	public void garbage(Object A, Object B) 
+	{
+		AnotherClass var=new AnotherClass();
+		synchronized (A)
+		{
+			var.outside(B,sum);
 		}
 	}
 
@@ -26,9 +29,11 @@ public class MainFile implements Runnable {
 
 	public void bar(Object A, Object B) {
 		synchronized (B) {
-			synchronized (A) {
+			synchronized (
+					A) {
 				for (int i = 0; i < repetitions; i++) {
-					sum--;
+					sum--
+					;
 
 				}
 			}
@@ -46,8 +51,9 @@ public class MainFile implements Runnable {
 		// TODO Auto-generated method stub
 
 		for (int x = 0; x < 2; x++) {
-			garbage(lock1, lock2);
-			 bar(lock1,lock2);
+			garbage(lock1,
+					lock2);
+			bar(lock1, lock2);
 		}
 		System.out.println(getSum(lock1));
 	}
