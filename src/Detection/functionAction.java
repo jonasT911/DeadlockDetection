@@ -26,13 +26,14 @@ public class functionAction {
 	}
 
 	public void addLock(LockNode lockName) {
+		System.out.println("Passed args "+passedArgs);
 		for (int i = 0; i < passedArgs.size(); i++) {
 			if (lockName.lockName.equals(passedArgs.get(i))) {
 				lockName.lockObj=i+"";
 			//This is necessary for passed arguments, but for now I dont want it.
 			}
 		}
-		System.out.println("add lock in function "+lockName.lockName);
+		System.out.println("Function "+ functionName+" add lock: "+lockName);
 		locksAcquired.add(lockName);
 	}
 
@@ -45,9 +46,9 @@ public class functionAction {
 		for(int i=0; i<passedArgs.size();i++) {
 			for(int j=0; j<currentFunction.argsMapping.size();j++) {
 				if(passedArgs.get(i).equals(currentFunction.argsMapping.get(j))) {
-					System.out.println("Swap args "+currentFunction.passedArgs.get(i)+ " and "+passedArgs.get(i));
+					System.out.println("Swap args "+currentFunction.passedArgs.get(j)+ " and "+passedArgs.get(i));
 				//	passedArgs.remove(i);
-					passedArgs.set(i,currentFunction.passedArgs.get(i));
+					passedArgs.set(i,currentFunction.passedArgs.get(j));
 					
 				}
 			}
@@ -55,14 +56,18 @@ public class functionAction {
 	}
 
 	public void setArgs(String args) {
+		
 		argsMapping=passedArgs;
 		passedArgs = new ArrayList<>();
 		String temp = args.replace("  ", " ");
 		temp = temp.replace("\t", "");
-	
+		while(temp.length()>0 && temp.charAt(0)==' ') {
+			temp=temp.substring(1);
+			System.out.println(temp);
+		}
 		while (temp.indexOf(',') != -1) {
 			String 	addString=temp.substring(0, temp.indexOf(','));
-			System.out.println(addString);
+			//System.out.println(addString);
 			if(addString.contains(" ")) {
 			addString=temp.substring(temp.indexOf(' ')+1, temp.indexOf(','));
 	
