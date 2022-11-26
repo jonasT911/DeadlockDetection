@@ -133,16 +133,14 @@ public class master {
 							// on the
 							// locks currently held.
 
-					
-
-							funct.addLock(newLock);							
+							funct.addLock(newLock);
 							for (int x = 0; x < locksCurrentlyHeld.size(); x++) {
 								locksCurrentlyHeld.get(x).locksAcquiredWithin.add(newLock);
 								// Change this so the edge is only added if the node is run.
 								funct.edgesMade.add(new lockEdge(locksCurrentlyHeld.get(x), newLock));// Error is here
 							}
 							locksCurrentlyHeld.add(newLock);
-							
+
 							// System.out.println("Adding new lock " + newLock.lockName + newLock.level);
 							// System.out.println(locksCurrentlyHeld.size());
 						}
@@ -228,36 +226,50 @@ public class master {
 
 						// Check if the data contains the class as the type for a variable
 						// If it does, add the variable name and class as a mapping
-						System.out.println("Line: " + data);
+						// System.out.println("Line: " + data);
 						for (int i = 0; i < classList.size(); i++) {
 							int location = data.indexOf(classList.get(i));
-							if (location != -1) {
+							if (location != -1 && !data.contains(" class ")) {
 
 								if (data.contains("Thread")) {
 									System.out.println("Its a thread");//
 									String temp = data.substring(data.indexOf("Thread") + 7);
-									String newFunct ;
-									if (temp.contains("Thread") && temp.contains("(")) {
+									String newFunct;
+									if (temp.contains("Thread") && temp.contains("new ")) {
 										newFunct = temp.substring(temp.indexOf("("));
-										newFunct = newFunct.substring(newFunct.indexOf("(")+1,newFunct.indexOf(")")-1);
-										System.out.println("Thread class is "+newFunct);
-										
-									
-									}else {
-										newFunct="Something else";
+										newFunct = newFunct.substring(newFunct.indexOf("new ") + 4,
+												newFunct.indexOf(")") - 1);
+										System.out.println("Thread class is " + newFunct);
+
+									} else {
+										newFunct = "Something else";
 									}
 
 									temp = temp.substring(0, temp.indexOf(" "));
 									System.out.println(temp);
-									VariableToClass.put(newFunct, temp);//Repeat this for non thread class.
-								}else {
-									
+									VariableToClass.put(temp, classList.get(i));
+
+								} else {
+									// A non thread class variable is declared.
+									String temp = data.substring(location + classList.get(i).length() + 1);
+									// System.out.println("CLASS NAME IS " + temp);
+									if (temp.indexOf(' ') != -1) {
+										temp = temp.substring(0, temp.indexOf(' '));
+									}
+									if (temp.indexOf('=') != -1) {
+										temp = temp.substring(0, temp.indexOf('='));
+									}
+									if (temp.indexOf(';') != -1) {
+										temp = temp.substring(0, temp.indexOf(';'));
+									}
+									System.out.println(temp);
+									VariableToClass.put(temp, classList.get(i));
 								}
-								System.out.println("Found class name " + classList.get(i));
-								System.out.println("Found class " + data);
+//								System.out.println("Found class name " + classList.get(i));
+//								System.out.println("Found class " + data);
 							}
 						}
-						// if(data.contains(s))
+
 					}
 				} catch (FileNotFoundException e) {
 					System.out.println("An error occurred.");
@@ -265,6 +277,11 @@ public class master {
 				}
 			}
 		}
+		System.out.println("Map is :" + VariableToClass);
+//		for (int i = 0; i < classList.size(); i++) {
+//			System.out.print(classList.get(i) + " ");
+//			// System.out.println(classList.get )
+//		}
 		// Step 3 Starting at main, find every place where run is called on a runnable
 		// class.
 		// From there add all the locks taken into a directed graph such that a lock
@@ -276,7 +293,7 @@ public class master {
 		ArrayList<LockNode> SearchTree = new ArrayList<LockNode>();
 
 		traceExecution(SearchTree, thisProgram, new ArrayList<LockNode>(), mainFunction, listOfEdges,
-				new ArrayList<LockNode>());
+				new ArrayList<LockNode>(), VariableToClass);
 		// TODO: CHange later to use first multithreaded function.
 
 		// Step 4 DFS to find cycles.
@@ -394,13 +411,27 @@ public class master {
 		// class.
 		int leftIndex = temp.indexOf('(') - 2;
 
-		while (leftIndex >= 0 && temp.charAt(leftIndex) != ' ' && temp.charAt(leftIndex) != '.') {
+		// WHile the function is using numbers and letters
+		while (leftIndex >= 0 && ((temp.charAt(leftIndex) >= 'a' && temp.charAt(leftIndex) <= 'z')
+				|| (temp.charAt(leftIndex) >= 'A' && temp.charAt(leftIndex) <= 'Z')
+				|| (temp.charAt(leftIndex) >= '0' && temp.charAt(leftIndex) <= '9'))) {
 
 			leftIndex--;
 		}
 		leftIndex++;
 
-		calledFunctions out = new calledFunctions(temp.substring(leftIndex, temp.indexOf('(')), isMultithreaded);
+		String targetClass = "";
+
+		if (leftIndex>0&&temp.charAt(leftIndex-1) == '.') {
+			
+			targetClass=temp.substring(0,leftIndex-1);
+			targetClass=targetClass.replace(" ", "");
+			
+		}else {
+			targetClass = funct.className;
+		}
+		calledFunctions out = new calledFunctions(temp.substring(leftIndex, temp.indexOf('(')), targetClass,
+				isMultithreaded);
 
 		if (out.functionName.equals("for") || out.functionName.equals("for ")) {
 			return;
@@ -423,7 +454,7 @@ public class master {
 	 */
 	static void traceExecution(ArrayList<LockNode> SearchTree, ArrayList<functionAction> program,
 			ArrayList<LockNode> locksHeld, functionAction currentFunction, ArrayList<lockEdge> listOfEdges,
-			ArrayList<LockNode> oldLocks) {
+			ArrayList<LockNode> oldLocks, Map<String, String> VariableToClass) {
 		// Pass list of functions, an arraylist of
 		// locks held while going into this function
 		// If a lock is held and another lock is acquired add that relation to the lock
@@ -434,10 +465,10 @@ public class master {
 		System.out.println("\nRECURSIVE START");
 		System.out.println(currentFunction.className);
 		System.out.println(currentFunction.functionName);
-		System.out.println("Args "+currentFunction.passedArgs);
-		System.out.println("St "+SearchTree);
+		System.out.println("Args " + currentFunction.passedArgs);
+		System.out.println("St " + SearchTree);
 		System.out.println(locksHeld);
-		System.out.println("List of edges "+listOfEdges);
+		System.out.println("List of edges " + listOfEdges);
 		System.out.println(oldLocks);
 
 		ArrayList<LockNode> locksAddedThisCycle = new ArrayList<LockNode>();
@@ -524,19 +555,37 @@ public class master {
 		// Go to next functions
 		for (int i = 0; i < currentFunction.functionsCalled.size(); i++) {
 			int location = -1;
+			String targetClass = currentFunction.functionsCalled.get(i).className;
+			String targetFunction = currentFunction.functionsCalled.get(i).functionName;
+			System.out.println("Next class: "+targetClass + " next funct: "+targetFunction);
 			for (int j = 0; j < program.size(); j++) {
 				// System.out.println(program.get(j).functionName+"
 				// "+(currentFunction.functionsCalled.get(i).functionName));
-				if (program.get(j).functionName.equals(currentFunction.functionsCalled.get(i).functionName)
-						|| (program.get(j).functionName.equals("run")
-								&& currentFunction.functionsCalled.get(i).functionName.equals("start"))) {
+
+				// Replace class name if function is in the mapping
+
+				String nextClass = program.get(j).className;
+				String nextFunct = program.get(j).functionName;
+				
+				if (VariableToClass.containsKey(targetClass)) {
+					System.out.println("Founf" + targetClass);
+					targetClass =VariableToClass.get(targetClass);
+					System.out.println("New class is " + targetClass);
+				}
+			
+				boolean foundFunction = nextFunct.equals(targetFunction)
+						&& (nextClass.equals(targetClass));
+				boolean foundThread = ((program.get(j).functionName.equals("run")
+						&& currentFunction.functionsCalled.get(i).functionName.equals("start")));
+
+				if (foundFunction || foundThread) {
 					// Does not factor in class
 					// TODO: Add that to the comparison.
 
 					// This is useful for propagating passed args
 					program.get(j).setArgs(currentFunction.functionsCalled.get(i).argsPassed);
 					program.get(j).updatePropagatedArgs(currentFunction);
-					 System.out.println("New function args "+currentFunction.functionsCalled.get(i).argsPassed);
+					System.out.println("New function args " + currentFunction.functionsCalled.get(i).argsPassed);
 					location = j;
 					break;
 				}
@@ -551,7 +600,8 @@ public class master {
 				locksHeld.addAll(locksAddedThisCycle);
 				oldLocks.addAll(oldLocksAddedThisCycle);
 
-				traceExecution(SearchTree, program, locksHeld, program.get(location), listOfEdges, oldLocks);
+				traceExecution(SearchTree, program, locksHeld, program.get(location), listOfEdges, oldLocks,
+						VariableToClass);
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
 				currentFunction.visited = false;
