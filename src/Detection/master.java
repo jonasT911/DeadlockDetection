@@ -10,6 +10,10 @@ import java.util.Scanner;
 
 public class master {
 
+
+	static int  numberOfRecursions=0;
+
+	
 	public static void main(String[] args) {
 		ArrayList<lockEdge> listOfEdges = new ArrayList<lockEdge>();
 		// TODO Auto-generated method stub
@@ -21,7 +25,7 @@ public class master {
 		ArrayList<String> classList = new ArrayList<String>();
 		String currentClass = "";
 		int lineNumber = 0;
-
+		
 		ArrayList<LockNode> locksCurrentlyHeld = new ArrayList<LockNode>();
 
 		// STEP 1: Create list of all functions, as well as the functions called and the
@@ -437,14 +441,15 @@ public class master {
 			return;
 		}
 		if (temp.contains("(") && temp.contains(")")) {
-
-			out.argsPassed = temp.substring(temp.indexOf('(') + 1, temp.indexOf(')'));
-			funct.addFunction(out);
-			boolean nextIsMultithreaded = false;
-			if (out.functionName.equals("Thread")) {
-				nextIsMultithreaded = true;
+			if (temp.indexOf('(') < temp.indexOf(')')) {
+				out.argsPassed = temp.substring(temp.indexOf('(') + 1, temp.indexOf(')'));
+				funct.addFunction(out);
+				boolean nextIsMultithreaded = false;
+				if (out.functionName.equals("Thread")) {
+					nextIsMultithreaded = true;
+				}
+				addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
 			}
-			addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
 		}
 	}
 
@@ -598,15 +603,19 @@ public class master {
 					System.out.println("Recursion Detected in Code under test\n");
 					return;
 				}
+				if(numberOfRecursions<4) {
+					numberOfRecursions++;
 				currentFunction.visited = true;
 				locksHeld.addAll(locksAddedThisCycle);
 				oldLocks.addAll(oldLocksAddedThisCycle);
-
+			
+				
 				traceExecution(SearchTree, program, locksHeld, program.get(location), listOfEdges, oldLocks,
 						VariableToClass);
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
 				currentFunction.visited = false;
+				}
 			}
 
 		}
