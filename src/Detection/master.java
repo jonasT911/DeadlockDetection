@@ -10,6 +10,8 @@ import java.util.Scanner;
 
 public class master {
 
+	static int numberOfRecursions;
+	
 	public static void main(String[] args) {
 		ArrayList<lockEdge> listOfEdges = new ArrayList<lockEdge>();
 		// TODO Auto-generated method stub
@@ -599,6 +601,8 @@ public class master {
 					System.out.println("Recursion Detected in Code under test\n");
 					return;
 				}
+				if(numberOfRecursions<4) {
+					numberOfRecursions++;
 				currentFunction.visited = true;
 				locksHeld.addAll(locksAddedThisCycle);
 				oldLocks.addAll(oldLocksAddedThisCycle);
@@ -608,6 +612,7 @@ public class master {
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
 				currentFunction.visited = false;
+			}
 			}
 
 		}
