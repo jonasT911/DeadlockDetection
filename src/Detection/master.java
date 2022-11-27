@@ -422,12 +422,12 @@ public class master {
 
 		String targetClass = "";
 
-		if (leftIndex>0&&temp.charAt(leftIndex-1) == '.') {
-			
-			targetClass=temp.substring(0,leftIndex-1);
-			targetClass=targetClass.replace(" ", "");
-			
-		}else {
+		if (leftIndex > 0 && temp.charAt(leftIndex - 1) == '.') {
+
+			targetClass = temp.substring(0, leftIndex - 1);
+			targetClass = targetClass.replace(" ", "");
+
+		} else {
 			targetClass = funct.className;
 		}
 		calledFunctions out = new calledFunctions(temp.substring(leftIndex, temp.indexOf('(')), targetClass,
@@ -436,13 +436,16 @@ public class master {
 		if (out.functionName.equals("for") || out.functionName.equals("for ")) {
 			return;
 		}
-		out.argsPassed = temp.substring(temp.indexOf('(') + 1, temp.indexOf(')'));
-		funct.addFunction(out);
-		boolean nextIsMultithreaded = false;
-		if (out.functionName.equals("Thread")) {
-			nextIsMultithreaded = true;
+		if (temp.contains("(") && temp.contains(")")) {
+
+			out.argsPassed = temp.substring(temp.indexOf('(') + 1, temp.indexOf(')'));
+			funct.addFunction(out);
+			boolean nextIsMultithreaded = false;
+			if (out.functionName.equals("Thread")) {
+				nextIsMultithreaded = true;
+			}
+			addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
 		}
-		addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
 	}
 
 	/*
@@ -557,7 +560,7 @@ public class master {
 			int location = -1;
 			String targetClass = currentFunction.functionsCalled.get(i).className;
 			String targetFunction = currentFunction.functionsCalled.get(i).functionName;
-			System.out.println("Next class: "+targetClass + " next funct: "+targetFunction);
+			System.out.println("Next class: " + targetClass + " next funct: " + targetFunction);
 			for (int j = 0; j < program.size(); j++) {
 				// System.out.println(program.get(j).functionName+"
 				// "+(currentFunction.functionsCalled.get(i).functionName));
@@ -566,15 +569,14 @@ public class master {
 
 				String nextClass = program.get(j).className;
 				String nextFunct = program.get(j).functionName;
-				
+
 				if (VariableToClass.containsKey(targetClass)) {
 					System.out.println("Founf" + targetClass);
-					targetClass =VariableToClass.get(targetClass);
+					targetClass = VariableToClass.get(targetClass);
 					System.out.println("New class is " + targetClass);
 				}
-			
-				boolean foundFunction = nextFunct.equals(targetFunction)
-						&& (nextClass.equals(targetClass));
+
+				boolean foundFunction = nextFunct.equals(targetFunction) && (nextClass.equals(targetClass));
 				boolean foundThread = ((program.get(j).functionName.equals("run")
 						&& currentFunction.functionsCalled.get(i).functionName.equals("start")));
 
