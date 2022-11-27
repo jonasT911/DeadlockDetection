@@ -437,14 +437,15 @@ public class master {
 			return;
 		}
 		if (temp.contains("(") && temp.contains(")")) {
-
-			out.argsPassed = temp.substring(temp.indexOf('(') + 1, temp.indexOf(')'));
-			funct.addFunction(out);
-			boolean nextIsMultithreaded = false;
-			if (out.functionName.equals("Thread")) {
-				nextIsMultithreaded = true;
+			if (temp.indexOf('(') < temp.indexOf(')')) {
+				out.argsPassed = temp.substring(temp.indexOf('(') + 1, temp.indexOf(')'));
+				funct.addFunction(out);
+				boolean nextIsMultithreaded = false;
+				if (out.functionName.equals("Thread")) {
+					nextIsMultithreaded = true;
+				}
+				addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
 			}
-			addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
 		}
 	}
 
