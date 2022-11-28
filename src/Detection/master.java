@@ -13,6 +13,12 @@ public class master {
 	static int numberOfRecursions;
 	
 	public static void main(String[] args) {
+		String slash = "\\";
+		String os = System.getProperty("os.name");
+		//		System.out.println(os);
+		if(os.charAt(0) == 'M'){
+			slash = "/";
+		}
 		ArrayList<lockEdge> listOfEdges = new ArrayList<lockEdge>();
 		// TODO Auto-generated method stub
 		boolean runnable = false;
@@ -34,11 +40,14 @@ public class master {
 		if (args.length == 0) {
 			path = "";
 		} else {
-			path = "/" + args[0];
+			path = slash + args[0];
 		}
-		System.out.println(System.getProperty("user.dir") + path + "/airplane");
-		File directoryPath = new File(System.getProperty("user.dir") + path + "/airplane");
 
+
+//		File directoryPath = new File(System.getProperty("user.dir") + path);
+		String direc = System.getProperty("user.dir") + path + slash +"alarm";
+		File directoryPath = new File(direc);
+		System.out.println(direc);
 		// List of all files and directories
 		if (directoryPath == null) {
 			System.out.println("directory is null somehow.");
@@ -56,7 +65,8 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(System.getProperty("user.dir") + path+"/" +contents[j]);
+					System.out.println(directoryPath + slash +contents[j]);
+					File myObj = new File(directoryPath + slash +contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -189,12 +199,13 @@ public class master {
 			System.out.println("Listing did not work");
 		}
 		for (int j = 0; j < contents.length; j++) {
-			 System.out.println("xixi::::::::::" + contents[j]);
+
 			if (contents[j].contains(".java")) {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(System.getProperty("user.dir") + path+"/" +contents[j]);
+					System.out.println(directoryPath + slash +contents[j]);
+					File myObj = new File(directoryPath + slash +contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
