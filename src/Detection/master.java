@@ -11,21 +11,20 @@ import java.util.Scanner;
 public class master {
 
 	static int numberOfRecursions;
-	
-	//Vars for recursion
+
+	// Vars for recursion
 	static ArrayList<LockNode> SearchTree = new ArrayList<LockNode>();
 	static ArrayList<functionAction> program = new ArrayList<functionAction>();
-	static ArrayList<LockNode> temp=new ArrayList<LockNode>();
+	static ArrayList<LockNode> temp = new ArrayList<LockNode>();
 
 	static ArrayList<LockNode> locksHeld = new ArrayList<LockNode>();
 
-	static 	ArrayList<lockEdge> listOfEdges= new ArrayList<lockEdge>();
-	static 	ArrayList<LockNode> oldLocks=new ArrayList<LockNode>();
-	static 	Map<String, String> VariableToClass = new HashMap<String, String>();
-	
-	
+	static ArrayList<lockEdge> listOfEdges = new ArrayList<lockEdge>();
+	static ArrayList<LockNode> oldLocks = new ArrayList<LockNode>();
+	static Map<String, String> VariableToClass = new HashMap<String, String>();
+
 	public static void main(String[] args) {
-	
+
 		// TODO Auto-generated method stub
 		boolean runnable = false;
 		System.out.println("Start Deadlock Detection");
@@ -40,7 +39,6 @@ public class master {
 
 		// STEP 1: Create list of all functions, as well as the functions called and the
 		// locks acquired.
-		
 
 		String path;
 		if (args.length == 0) {
@@ -75,6 +73,8 @@ public class master {
 					boolean hasMoreLines = true;
 					System.out.println("StartReading " + contents[j]);
 					while (hasMoreLines) {
+
+						// Collects lines from the file into a single line of code.
 						String data = "";
 						boolean isBlockComment = false;
 						while (!data.contains(";") && !data.contains("{") && !data.contains("}") && hasMoreLines) {
@@ -113,10 +113,9 @@ public class master {
 						data = data.replace("\n", " ");
 						data = data.replace("\t", " ");
 						data = data.replace("  ", " ");
-						/*
-						 * while(myReader.hasNextLine()) { String data=myReader.nextLine();
-						 */
-						// System.out.println("|"+data+"|");
+
+						// Data is now a full line of code from the file
+
 						String tempClass = getClassName(data, runnable);
 						if (tempClass != null) {
 							currentClass = tempClass;
@@ -130,6 +129,7 @@ public class master {
 						if (isFunctionDefinition(data, openBrackets)) {
 
 							funct = new functionAction(currentClass, getFunctionName(data), runnable);
+
 							funct.setArgs(data.substring(data.indexOf('(') + 1, (data.indexOf(')'))));
 							// funct.locksAcquired.addAll(locksCurrentlyHeld);
 						}
@@ -175,7 +175,7 @@ public class master {
 						addFunctionCall(data, funct, false);
 						if (funct.functionName.equals("main")) {
 							mainFunction = funct;
-						
+
 						}
 						// System.out.println(data);
 
@@ -211,7 +211,7 @@ public class master {
 		System.out.println(classList);
 		// Step 2
 		// Removed
-	
+
 		if (contents == null) {
 			System.out.println("Listing did not work");
 		}
@@ -320,9 +320,8 @@ public class master {
 		// name is found, replace it with the class.
 		// when lock name is same as existing lock node, add all held locks to the lcoks
 		// held list
-		
 
-		traceExecution( mainFunction);//Only mainFunction stays
+		traceExecution(mainFunction);// Only mainFunction stays
 		// TODO: CHange later to use first multithreaded function.
 
 		// Step 4 DFS to find cycles.
@@ -456,7 +455,12 @@ public class master {
 
 		String targetClass = "";
 
-		if (leftIndex > 0 && temp.charAt(leftIndex) == '.') {
+		// Find the class this should be in.
+		System.out.println("Function is " + data);
+		if (data.contains("new")) {
+			targetClass = temp.substring(leftIndex + 1, temp.indexOf('('));
+
+		} else if (leftIndex > 0 && temp.charAt(leftIndex) == '.') {
 
 			targetClass = temp.substring(0, leftIndex);
 			targetClass = targetClass.replace(" ", "");
@@ -464,10 +468,18 @@ public class master {
 		} else {
 			targetClass = funct.className;
 		}
+
+		// Create a function with the target class and the passed args
 		calledFunctions out = new calledFunctions(temp.substring(leftIndex + 1, temp.indexOf('(')), targetClass,
 				isMultithreaded);
 
-		if (out.functionName.equals("for") || out.functionName.equals("for ")) {
+		out.functionName.replace(" ", "");
+		if (out.functionName.equals("for") || out.functionName.equals("if")) {
+			boolean nextIsMultithreaded = false;
+			if (out.functionName.equals("Thread")) {
+				nextIsMultithreaded = true;
+			}
+			addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
 			return;
 		}
 
@@ -478,6 +490,7 @@ public class master {
 		if (temp.contains("(") && temp.contains(")")) {
 			if (temp.indexOf('(') < temp.indexOf(')')) {
 				out.argsPassed = temp.substring(temp.indexOf('(') + 1, temp.indexOf(')'));
+				out.className.replace(" ", "");
 				funct.addFunction(out);
 				boolean nextIsMultithreaded = false;
 				if (out.functionName.equals("Thread")) {
@@ -634,20 +647,22 @@ public class master {
 
 			if (location != -1) {
 				if (program.get(location).visited) {
-					System.out.println("Recursion Detected in Code under test\n");
+					System.out.println("Ive already been here\n");
 					return;
 				}
 
 				currentFunction.visited = true;
-				System.out.println("New locks " +locksAddedThisCycle);
-				System.out.println("Held locks " +locksHeld);
+				System.out.println("New locks " + locksAddedThisCycle);
+				System.out.println("Held locks " + locksHeld);
 				locksHeld.addAll(locksAddedThisCycle);
 				oldLocks.addAll(oldLocksAddedThisCycle);
 
-				traceExecution( program.get(location));
+				traceExecution(program.get(location));
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
-				currentFunction.visited = false;
+				// currentFunction.visited = false;
+				// Right now I have this commented so that we dont look at already seen
+				// functions.
 
 			}
 
