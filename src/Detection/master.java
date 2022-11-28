@@ -61,10 +61,10 @@ public class master {
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
 					boolean hasMoreLines = true;
-					System.out.println("StartReading "+contents[j]);
+					System.out.println("StartReading " + contents[j]);
 					while (hasMoreLines) {
 						String data = "";
-						boolean isBlockComment=false;
+						boolean isBlockComment = false;
 						while (!data.contains(";") && !data.contains("{") && !data.contains("}") && hasMoreLines) {
 							if (myReader.hasNextLine()) {
 
@@ -72,10 +72,10 @@ public class master {
 
 								lineNumber++;
 								temp = myReader.nextLine();
-								//System.out.println(temp);
+								// System.out.println(temp);
 								if (!isBlockComment || temp.contains("*/")) {
-									isBlockComment=false;
-									 
+									isBlockComment = false;
+
 									int commentIndex = temp.indexOf("//");
 									if (commentIndex != -1) {
 										temp = temp.substring(0, commentIndex);
@@ -90,7 +90,7 @@ public class master {
 										temp = temp.substring(0, blockComment);
 										isBlockComment = true;
 									}
-								//	System.out.println(temp + "was temp");
+									// System.out.println(temp + "was temp");
 									data = data.concat(temp);
 								}
 							} else {
@@ -163,7 +163,7 @@ public class master {
 						addFunctionCall(data, funct, false);
 						if (funct.functionName.equals("main")) {
 							mainFunction = funct;
-							System.out.println("MAIN FUNCTION IS SET!!!!!!!!!!!!!!!!!!!!!");
+						
 						}
 						// System.out.println(data);
 
@@ -174,7 +174,6 @@ public class master {
 					e.printStackTrace();
 				}
 
-			
 			}
 		}
 
@@ -301,8 +300,8 @@ public class master {
 //			System.out.print(classList.get(i) + " ");
 //			// System.out.println(classList.get )
 //		}
-		// Step 3 Starting at main, find every place where run is called on a runnable
-		// class.
+		// Step 3
+		// Starting at main, find every place where run is called on a runnable class.
 		// From there add all the locks taken into a directed graph such that a lock
 		// acquired while holding another lock is a directed edge.
 		// Whenever a class is declared save the map from name to class. WHenever that
