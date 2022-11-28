@@ -155,14 +155,14 @@ public class master {
 							}
 						}
 						if (data.contains("synchronized")) {
-							System.out.println("New Lock at "+data);
+							System.out.println("New Lock at " + data);
 							String temp = data.substring(data.indexOf('(') + 1, data.indexOf(')'));
 							LockNode newLock = new LockNode(temp, openBrackets, contents[j], lineNumber);
-							
+
 							String functionName = data.replace(" ", "");
-							if(functionName.indexOf("synchronized")+12!=functionName.indexOf("(")) {
-								System.out.println(functionName.charAt(functionName.indexOf("synchronized")+12));
-								 newLock = new LockNode("this", openBrackets, contents[j], lineNumber);
+							if (functionName.indexOf("synchronized") + 12 != functionName.indexOf("(")) {
+								System.out.println(functionName.charAt(functionName.indexOf("synchronized") + 12));
+								newLock = new LockNode("this", openBrackets, contents[j], lineNumber);
 							}
 							// newLock.locksAcquiredWithin=locksCurrentlyHeld;//Change to add new lock lists
 							// on the
@@ -327,9 +327,9 @@ public class master {
 		// name is found, replace it with the class.
 		// when lock name is same as existing lock node, add all held locks to the lcoks
 		// held list
-		ArrayList<functionAction> functsToExamine=new ArrayList<functionAction>();
+		ArrayList<functionAction> functsToExamine = new ArrayList<functionAction>();
 		functsToExamine.add(mainFunction);
-		while(functsToExamine.size()>0) {
+		while (functsToExamine.size() > 0) {
 			traceExecution(functsToExamine.get(0));
 			functsToExamine.remove(0);
 		}
@@ -569,30 +569,33 @@ public class master {
 				// System.out.println("Already found " + temp.lockName + " with size " +
 				// temp.locksAcquiredWithin.size());
 
-				for (int k = 0; k < temp.locksAcquiredWithin.size(); k++) {// For each held lock
-					boolean found = false;
-					convertFromArg(temp.locksAcquiredWithin.get(k), currentFunction);
-					for (int j = 0; j < SearchTree.size(); j++) {// Check if the held lock is in the tree
-						if (SearchTree.get(j).lockObj.equals(temp.locksAcquiredWithin.get(k).lockObj)) {
-							// Held lock matches a node in the tree.
-							// System.out.println("Add held from search tree " +
-							// temp.locksAcquiredWithin.get(k).lockName);
-							found = true;
-							// Add the object from the tree
-							// System.out.println("Add "+SearchTree.get(j));
-							SearchTree.get(location).locksAcquiredWithin.add(SearchTree.get(j));
+				if (SearchTree.get(location) != temp) {
+					for (int k = 0; k < temp.locksAcquiredWithin.size(); k++) {// For each held lock
+						boolean found = false;
+						convertFromArg(temp.locksAcquiredWithin.get(k), currentFunction);
+						for (int j = 0; j < SearchTree.size(); j++) {// Check if the held lock is in the tree
+							if (SearchTree.get(j).lockObj.equals(temp.locksAcquiredWithin.get(k).lockObj)) {
+								// Held lock matches a node in the tree.
+								// System.out.println("Add held from search tree " +
+								// temp.locksAcquiredWithin.get(k).lockName);
+								found = true;
+								// Add the object from the tree
+								System.out.println("Add " + SearchTree.get(j));
+								// if()
+								SearchTree.get(location).locksAcquiredWithin.add(SearchTree.get(j));
 
+							}
 						}
-					}
-					if (!found) {
+						if (!found) {
 
-						// System.out.println("add new held temp " +
-						// temp.locksAcquiredWithin.get(k).lockName);
+							// System.out.println("add new held temp " +
+							// temp.locksAcquiredWithin.get(k).lockName);
 
-						// Otherwise add a new object to the held lock list
-						// System.out.println("Add to lock "+SearchTree.get(location)+" new lock
-						// "+temp.locksAcquiredWithin.get(k));
-						SearchTree.get(location).locksAcquiredWithin.add(temp.locksAcquiredWithin.get(k));
+							// Otherwise add a new object to the held lock list
+							// System.out.println("Add to lock "+SearchTree.get(location)+" new lock
+							// "+temp.locksAcquiredWithin.get(k));
+							SearchTree.get(location).locksAcquiredWithin.add(temp.locksAcquiredWithin.get(k));
+						}
 					}
 				}
 				locksAddedThisCycle.add(SearchTree.get(location));
@@ -660,22 +663,22 @@ public class master {
 			if (location != -1) {
 				if (program.get(location).visited) {
 					System.out.println("Ive already been here\n");
-					return;
+					// This might need to change to more accurately capture converging threads.
+				} else {
+
+					currentFunction.visited = true;
+					System.out.println("New locks " + locksAddedThisCycle);
+					System.out.println("Held locks " + locksHeld);
+					locksHeld.addAll(locksAddedThisCycle);
+					oldLocks.addAll(oldLocksAddedThisCycle);
+
+					traceExecution(program.get(location));
+					locksHeld.removeAll(locksAddedThisCycle);
+					oldLocks.removeAll(oldLocksAddedThisCycle);
+					currentFunction.visited = false;
+					// Right now I have this commented so that we dont look at already seen
+					// functions.
 				}
-
-				currentFunction.visited = true;
-				System.out.println("New locks " + locksAddedThisCycle);
-				System.out.println("Held locks " + locksHeld);
-				locksHeld.addAll(locksAddedThisCycle);
-				oldLocks.addAll(oldLocksAddedThisCycle);
-
-				traceExecution(program.get(location));
-				locksHeld.removeAll(locksAddedThisCycle);
-				oldLocks.removeAll(oldLocksAddedThisCycle);
-				currentFunction.visited = false;
-				// Right now I have this commented so that we dont look at already seen
-				// functions.
-
 			}
 
 		}
