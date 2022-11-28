@@ -327,25 +327,22 @@ public class master {
 		// name is found, replace it with the class.
 		// when lock name is same as existing lock node, add all held locks to the lcoks
 		// held list
-		ArrayList<functionAction> functsToExamine = new ArrayList<functionAction>();
-		functsToExamine.add(mainFunction);
-		while (functsToExamine.size() > 0) {
-			traceExecution(functsToExamine.get(0));
-			functsToExamine.remove(0);
-		}
+	
+			traceExecution(mainFunction);
+			//System.out.println("Final Search Tree is "+SearchTree);
 		// Only mainFunction stays
 		// TODO: CHange later to use first multithreaded function.
 
 		// Step 4 DFS to find cycles.
-//		System.out.println("\n\nBegin Search Tree");
-//		for (int i = 0; i < SearchTree.size(); i++) {
-//			System.out.println(SearchTree.get(i).lockName + " " + SearchTree.get(i) + "\nAcquires: ");
-//			for (int j = 0; j < SearchTree.get(i).locksAcquiredWithin.size(); j++) {
-//				System.out.print(SearchTree.get(i).locksAcquiredWithin.get(j).lockName + " "
-//						+ SearchTree.get(i).locksAcquiredWithin.get(j) + ", ");
-//			}
-//			System.out.println("\n");
-//		}
+		System.out.println("\n\nBegin Search Tree");
+		for (int i = 0; i < SearchTree.size(); i++) {
+			System.out.println(SearchTree.get(i).lockName + " " + SearchTree.get(i) + "\nAcquires: ");
+			for (int j = 0; j < SearchTree.get(i).locksAcquiredWithin.size(); j++) {
+				System.out.print(SearchTree.get(i).locksAcquiredWithin.get(j).lockName + " "
+						+ SearchTree.get(i).locksAcquiredWithin.get(j) + ", ");
+			}
+			System.out.println("\n");
+		}
 
 		ArrayList<LockNode> visited = new ArrayList<LockNode>();
 		ArrayList<LockNode> recList = new ArrayList<LockNode>();
@@ -372,9 +369,10 @@ public class master {
 						System.out.println(listOfEdges.get(l));
 					}
 				}
+				System.out.println("DEADLOCK FOUND!!!!!");
 			}
 		}
-		System.out.println("Finished");
+		System.out.println("Program Finished");
 
 	}
 //End main function
@@ -534,7 +532,7 @@ public class master {
 		System.out.println("Args " + currentFunction.passedArgs);
 		System.out.println("St " + SearchTree);
 		System.out.println(locksHeld);
-		System.out.println("List of edges " + listOfEdges);
+		//System.out.println("List of edges " + listOfEdges);
 		System.out.println("Next functions " + currentFunction.functionsCalled);
 
 		ArrayList<LockNode> locksAddedThisCycle = new ArrayList<LockNode>();
@@ -543,11 +541,14 @@ public class master {
 		// Add locks to search tree
 		for (int i = 0; i < currentFunction.locksAcquired.size(); i++) {
 
+			
 			LockNode temp = currentFunction.locksAcquired.get(i);
 //			System.out.println(temp.lockName);
 //			System.out.println(temp.locksAcquiredWithin);
 //			System.out.println();
-			convertFromArg(temp, currentFunction);
+			LockNode newLock = new LockNode(temp);
+			convertFromArg(newLock, currentFunction);
+
 			oldLocksAddedThisCycle.add(temp);
 			// Maintains location of each dependency's location
 			for (int j = 0; j < oldLocks.size(); j++) {
@@ -557,12 +558,16 @@ public class master {
 
 			int location = -1;
 
+			System.out.print(newLock.lockName+" "+newLock.lockObj + " compare to ");
 			// Search for the acquired lock in the search tree
 			for (int j = 0; j < SearchTree.size(); j++) {
-				if (SearchTree.get(j).lockObj.equals(temp.lockObj)) {
+				System.out.print( "| "+SearchTree.get(j).lockObj);
+				if (SearchTree.get(j).lockObj.equals(newLock.lockObj)) {
 					location = j;
 				}
 			}
+			
+			System.out.println();
 			if (location != -1) {
 				// Lock is already in tree
 				// update the node
@@ -572,9 +577,10 @@ public class master {
 				if (SearchTree.get(location) != temp) {
 					for (int k = 0; k < temp.locksAcquiredWithin.size(); k++) {// For each held lock
 						boolean found = false;
-						convertFromArg(temp.locksAcquiredWithin.get(k), currentFunction);
+						
+						convertFromArg(newLock, currentFunction);
 						for (int j = 0; j < SearchTree.size(); j++) {// Check if the held lock is in the tree
-							if (SearchTree.get(j).lockObj.equals(temp.locksAcquiredWithin.get(k).lockObj)) {
+							if (SearchTree.get(j).lockObj.equals(newLock.lockObj)) {
 								// Held lock matches a node in the tree.
 								// System.out.println("Add held from search tree " +
 								// temp.locksAcquiredWithin.get(k).lockName);
@@ -594,7 +600,7 @@ public class master {
 							// Otherwise add a new object to the held lock list
 							// System.out.println("Add to lock "+SearchTree.get(location)+" new lock
 							// "+temp.locksAcquiredWithin.get(k));
-							SearchTree.get(location).locksAcquiredWithin.add(temp.locksAcquiredWithin.get(k));
+							SearchTree.get(location).locksAcquiredWithin.add(newLock);
 						}
 					}
 				}
@@ -612,12 +618,17 @@ public class master {
 				// temp.locksAcquiredWithin.addAll(locksHeld);
 
 				for (int k = 0; k < locksHeld.size(); k++) {
-					locksHeld.get(k).locksAcquiredWithin.add(temp);
+					locksHeld.get(k).locksAcquiredWithin.add(newLock);
 				}
-
+				for(int lockIterator =0;lockIterator<newLock.locksAcquiredWithin.size();lockIterator++) {
+					LockNode newHeld=new LockNode(newLock.locksAcquiredWithin.get(lockIterator));
+					convertFromArg(newHeld, currentFunction);
+					newLock.locksAcquiredWithin.remove(lockIterator);
+					newLock.locksAcquiredWithin.add(lockIterator,newHeld);
+				}
 				locksAddedThisCycle.add(temp);
-				// System.out.println("ADD "+temp);
-				SearchTree.add(temp);
+				 System.out.println("ADD "+newLock);
+				SearchTree.add(newLock);
 			}
 		} // End lock for loop
 
@@ -660,6 +671,7 @@ public class master {
 				}
 			}
 
+			System.out.println("List of edges " + listOfEdges);
 			if (location != -1) {
 				if (program.get(location).visited) {
 					System.out.println("Ive already been here\n");
@@ -667,12 +679,13 @@ public class master {
 				} else {
 
 					currentFunction.visited = true;
+				
 					System.out.println("New locks " + locksAddedThisCycle);
 					System.out.println("Held locks " + locksHeld);
 					locksHeld.addAll(locksAddedThisCycle);
 					oldLocks.addAll(oldLocksAddedThisCycle);
 
-					traceExecution(program.get(location));
+					traceExecution(program.get(location));//The locks acquired are the same as the previous function. Needs to be separate vars at first.
 					locksHeld.removeAll(locksAddedThisCycle);
 					oldLocks.removeAll(oldLocksAddedThisCycle);
 					currentFunction.visited = false;
@@ -689,10 +702,11 @@ public class master {
 			return;
 		}
 		if (temp.lockObj.charAt(0) >= '0' && temp.lockObj.charAt(0) <= '9') {
-			// System.out.println("Its an arg");
+			 System.out.println("Its an arg");
 			int argIndex = Integer.parseInt(temp.lockObj);
-			// System.out.println(temp.lockName+" is now
-			// "+currentFunction.passedArgs.get(argIndex));//Change lock to be this
+			 //Change lock to be this
+			 System.out.println(temp.lockName+" is now"+currentFunction.passedArgs.get(argIndex));
+			
 			temp.lockObj = currentFunction.passedArgs.get(argIndex);
 		}
 	}

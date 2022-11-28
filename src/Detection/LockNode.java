@@ -27,6 +27,14 @@ ArrayList<lockEdge> edges;
 		lockObj=lockName; 
 	}
 
+	public  LockNode(LockNode copy) {
+		lockName= copy.lockName;
+		lockLocation=copy.lockLocation;
+		this.level=copy.level;
+		locksAcquiredWithin=copy.locksAcquiredWithin;
+		edges=copy.edges;
+		lockObj=copy.lockObj; 
+	}
 	
 	public String toString() {
 		return "Lock: " + lockName +" lock_object: "+lockObj+" at: "+lockLocation+" hash: " + this.hashCode();

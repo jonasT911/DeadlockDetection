@@ -5,6 +5,7 @@ public class MainFile implements Runnable {
 
 	static Object lock1 = new Object();
 	static Object lock2 = new Object();
+	static Object lock3 = new Object();
 	final int repetitions = 10000;
 
 	public void garbage(Object A, Object B) {
@@ -48,8 +49,9 @@ public class MainFile implements Runnable {
 		// TODO Auto-generated method stub
 
 		for (int x = 0; x < 2; x++) {
-			bar(lock2, lock1);
-			bar(lock1, lock2);
+			
+			foo(lock2, lock1);
+			foo(lock1, lock2);
 		}
 		System.out.println(getSum(lock1));
 	}
