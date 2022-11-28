@@ -36,8 +36,8 @@ public class master {
 		} else {
 			path = "/" + args[0];
 		}
-		System.out.println(System.getProperty("user.dir") + path + "/airplane");
-		File directoryPath = new File(System.getProperty("user.dir") + path + "/airplane");
+		System.out.println(System.getProperty("user.dir") + path);
+		File directoryPath = new File(System.getProperty("user.dir") + path);
 
 		// List of all files and directories
 		if (directoryPath == null) {
@@ -189,7 +189,7 @@ public class master {
 			System.out.println("Listing did not work");
 		}
 		for (int j = 0; j < contents.length; j++) {
-			 System.out.println("xixi::::::::::" + contents[j]);
+			// System.out.println(contents[j]);
 			if (contents[j].contains(".java")) {
 
 				// Begin reading the file
