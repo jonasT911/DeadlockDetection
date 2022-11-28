@@ -15,4 +15,9 @@ public class calledFunctions {
 		heldLocks=new ArrayList<LockNode>();
 		this.className=className;
 	}
+	
+	@Override
+	public String toString() {
+		return className+"."+functionName;
+	}
 }

@@ -26,14 +26,14 @@ public class functionAction {
 	}
 
 	public void addLock(LockNode lockName) {
-		System.out.println("Passed args "+passedArgs);
+		//System.out.println("Passed args "+passedArgs);
 		for (int i = 0; i < passedArgs.size(); i++) {
 			if (lockName.lockName.equals(passedArgs.get(i))) {
 				lockName.lockObj=i+"";
 			//This is necessary for passed arguments, but for now I dont want it.
 			}
 		}
-		System.out.println("Function "+ functionName+" add lock: "+lockName);
+		//System.out.println("Function "+ functionName+" add lock: "+lockName);
 		locksAcquired.add(lockName);
 	}
 
@@ -63,7 +63,7 @@ public class functionAction {
 		temp = temp.replace("\t", "");
 		while(temp.length()>0 && temp.charAt(0)==' ') {
 			temp=temp.substring(1);
-			System.out.println(temp);
+			//System.out.println(temp);
 		}
 		while (temp.indexOf(',') != -1) {
 			String 	addString=temp.substring(0, temp.indexOf(','));

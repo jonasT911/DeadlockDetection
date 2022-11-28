@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class master {
 
 	static int numberOfRecursions;
-	
+
 	public static void main(String[] args) {
 		ArrayList<lockEdge> listOfEdges = new ArrayList<lockEdge>();
 		// TODO Auto-generated method stub
@@ -56,29 +56,43 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(System.getProperty("user.dir") + path+"/" +contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path + "/" + contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
 					boolean hasMoreLines = true;
-
+					System.out.println("StartReading "+contents[j]);
 					while (hasMoreLines) {
 						String data = "";
+						boolean isBlockComment=false;
 						while (!data.contains(";") && !data.contains("{") && !data.contains("}") && hasMoreLines) {
 							if (myReader.hasNextLine()) {
+
 								String temp;
 
 								lineNumber++;
-								temp = myReader.nextLine();// Note, this will need to be change to key off of ; and {
-															// and not \r
-								// System.out.println(temp + "pre temp");
-								int commentIndex = temp.indexOf("//");
-								if (commentIndex != -1) {
-									temp = temp.substring(0, commentIndex);
+								temp = myReader.nextLine();
+								//System.out.println(temp);
+								if (!isBlockComment || temp.contains("*/")) {
+									isBlockComment=false;
+									 
+									int commentIndex = temp.indexOf("//");
+									if (commentIndex != -1) {
+										temp = temp.substring(0, commentIndex);
+									} else {
+										commentIndex = temp.indexOf("*/");
+										if (commentIndex != -1) {
+											temp = temp.substring(0, commentIndex);
+										}
+									}
+									int blockComment = temp.indexOf("/*");
+									if (blockComment != -1) {
+										temp = temp.substring(0, blockComment);
+										isBlockComment = true;
+									}
+								//	System.out.println(temp + "was temp");
+									data = data.concat(temp);
 								}
-								// System.out.println(temp + "was temp");
-								data = data.concat(temp);
-
 							} else {
 								// System.out.println("End file reading");
 								hasMoreLines = false;
@@ -147,7 +161,10 @@ public class master {
 							// System.out.println(locksCurrentlyHeld.size());
 						}
 						addFunctionCall(data, funct, false);
-
+						if (funct.functionName.equals("main")) {
+							mainFunction = funct;
+							System.out.println("MAIN FUNCTION IS SET!!!!!!!!!!!!!!!!!!!!!");
+						}
 						// System.out.println(data);
 
 					} // File reading while loop end
@@ -157,29 +174,28 @@ public class master {
 					e.printStackTrace();
 				}
 
-				if (funct.functionName.equals("main")) {
-					mainFunction = funct;
-				}
+			
 			}
 		}
 
 		// prints the locks found
-//		System.out.println("Locks found");
-//		for (int i = 0; i < thisProgram.size(); i++) {
-//			System.out.println(thisProgram.get(i).className + "." + thisProgram.get(i).functionName);
-//			for (int k = 0; k < thisProgram.get(i).locksAcquired.size(); k++) {
-//				System.out.print(thisProgram.get(i).locksAcquired.get(k).lockName + ", ");
-//			}
-//			System.out.println("]");
-//			System.out.print("[");
-//			for (int k = 0; k < thisProgram.get(i).functionsCalled.size(); k++) {
-//				System.out.print(thisProgram.get(i).functionsCalled.get(k).functionName + ", ");
-//			}
-//			System.out.println("]");
-//			System.out.println("Passed args are "+thisProgram.get(i).passedArgs);
-//			System.out.println(thisProgram.get(i).runnable);
-//
-//		}
+		System.out.println("Locks found");
+		for (int i = 0; i < thisProgram.size(); i++) {
+			System.out.println(thisProgram.get(i).className + "." + thisProgram.get(i).functionName);
+			System.out.print("[");
+			for (int k = 0; k < thisProgram.get(i).locksAcquired.size(); k++) {
+				System.out.print(thisProgram.get(i).locksAcquired.get(k).lockName + ", ");
+			}
+			System.out.println("]");
+			System.out.print("[");
+			for (int k = 0; k < thisProgram.get(i).functionsCalled.size(); k++) {
+				System.out.print(thisProgram.get(i).functionsCalled.get(k).functionName + ", ");
+			}
+			System.out.println("]");
+			System.out.println("Passed args are " + thisProgram.get(i).passedArgs);
+			System.out.println("Is runnable: " + thisProgram.get(i).runnable);
+
+		}
 
 		System.out.println(classList);
 		// Step 2
@@ -194,7 +210,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(System.getProperty("user.dir") + path+"/" +contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path + "/" + contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -246,9 +262,10 @@ public class master {
 									} else {
 										newFunct = "Something else";
 									}
-
-									temp = temp.substring(0, temp.indexOf(" "));
-									System.out.println(temp);
+									if (temp.contains(" ")) {
+										temp = temp.substring(0, temp.indexOf(" "));
+									}
+									// System.out.println(temp);
 									VariableToClass.put(temp, classList.get(i));
 
 								} else {
@@ -264,7 +281,7 @@ public class master {
 									if (temp.indexOf(';') != -1) {
 										temp = temp.substring(0, temp.indexOf(';'));
 									}
-									System.out.println(temp);
+									// System.out.println(temp);
 									VariableToClass.put(temp, classList.get(i));
 								}
 //								System.out.println("Found class name " + classList.get(i));
@@ -413,31 +430,41 @@ public class master {
 		// class.
 		int leftIndex = temp.indexOf('(') - 2;
 
+		if (leftIndex < 0) {
+			return;
+		}
 		// WHile the function is using numbers and letters
-		while (leftIndex >= 0 && ((temp.charAt(leftIndex) >= 'a' && temp.charAt(leftIndex) <= 'z')
+		while (((temp.charAt(leftIndex) >= 'a' && temp.charAt(leftIndex) <= 'z')
 				|| (temp.charAt(leftIndex) >= 'A' && temp.charAt(leftIndex) <= 'Z')
 				|| (temp.charAt(leftIndex) >= '0' && temp.charAt(leftIndex) <= '9'))) {
 
 			leftIndex--;
+			if (leftIndex < 0) {
+				return;
+			}
 		}
-		leftIndex++;
 
 		String targetClass = "";
 
-		if (leftIndex > 0 && temp.charAt(leftIndex - 1) == '.') {
+		if (leftIndex > 0 && temp.charAt(leftIndex) == '.') {
 
-			targetClass = temp.substring(0, leftIndex - 1);
+			targetClass = temp.substring(0, leftIndex);
 			targetClass = targetClass.replace(" ", "");
 
 		} else {
 			targetClass = funct.className;
 		}
-		calledFunctions out = new calledFunctions(temp.substring(leftIndex, temp.indexOf('(')), targetClass,
+		calledFunctions out = new calledFunctions(temp.substring(leftIndex + 1, temp.indexOf('(')), targetClass,
 				isMultithreaded);
 
 		if (out.functionName.equals("for") || out.functionName.equals("for ")) {
 			return;
 		}
+
+		if (temp.charAt(leftIndex) != '.' && temp.charAt(leftIndex) != ' ') {
+			return;
+		}
+
 		if (temp.contains("(") && temp.contains(")")) {
 			if (temp.indexOf('(') < temp.indexOf(')')) {
 				out.argsPassed = temp.substring(temp.indexOf('(') + 1, temp.indexOf(')'));
@@ -475,7 +502,7 @@ public class master {
 		System.out.println("St " + SearchTree);
 		System.out.println(locksHeld);
 		System.out.println("List of edges " + listOfEdges);
-		System.out.println(oldLocks);
+		System.out.println("Next functions " + currentFunction.functionsCalled);
 
 		ArrayList<LockNode> locksAddedThisCycle = new ArrayList<LockNode>();
 		ArrayList<LockNode> oldLocksAddedThisCycle = new ArrayList<LockNode>();
@@ -563,7 +590,8 @@ public class master {
 			int location = -1;
 			String targetClass = currentFunction.functionsCalled.get(i).className;
 			String targetFunction = currentFunction.functionsCalled.get(i).functionName;
-			System.out.println("Next class: " + targetClass + " next funct: " + targetFunction);
+			// System.out.println("Next class: " + targetClass + " next funct: " +
+			// targetFunction);
 			for (int j = 0; j < program.size(); j++) {
 				// System.out.println(program.get(j).functionName+"
 				// "+(currentFunction.functionsCalled.get(i).functionName));
@@ -574,12 +602,12 @@ public class master {
 				String nextFunct = program.get(j).functionName;
 
 				if (VariableToClass.containsKey(targetClass)) {
-					System.out.println("Founf" + targetClass);
+					// System.out.println("Founf" + targetClass);
 					targetClass = VariableToClass.get(targetClass);
-					System.out.println("New class is " + targetClass);
+					// System.out.println("New class is " + targetClass);
 				}
 
-				boolean foundFunction = nextFunct.equals(targetFunction) && (nextClass.equals(targetClass));
+				boolean foundFunction = nextFunct.equals(targetFunction); // && (nextClass.equals(targetClass));
 				boolean foundThread = ((program.get(j).functionName.equals("run")
 						&& currentFunction.functionsCalled.get(i).functionName.equals("start")));
 
@@ -601,8 +629,7 @@ public class master {
 					System.out.println("Recursion Detected in Code under test\n");
 					return;
 				}
-				if(numberOfRecursions<4) {
-					numberOfRecursions++;
+
 				currentFunction.visited = true;
 				locksHeld.addAll(locksAddedThisCycle);
 				oldLocks.addAll(oldLocksAddedThisCycle);
@@ -612,13 +639,16 @@ public class master {
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
 				currentFunction.visited = false;
-			}
+
 			}
 
 		}
 	}
 
 	static void convertFromArg(LockNode temp, functionAction currentFunction) {
+		if (temp.lockName.length() == 0) {
+			return;
+		}
 		if (temp.lockObj.charAt(0) >= '0' && temp.lockObj.charAt(0) <= '9') {
 			// System.out.println("Its an arg");
 			int argIndex = Integer.parseInt(temp.lockObj);
