@@ -42,7 +42,8 @@ public class master {
 			path = slash + args[0];
 		}
 		System.out.println(System.getProperty("user.dir") + path);
-		File directoryPath = new File(System.getProperty("user.dir") + path);
+		String direc = System.getProperty("user.dir") + path + "/alarm";
+		File directoryPath = new File(direc);
 
 		// List of all files and directories
 		if (directoryPath == null) {
@@ -61,7 +62,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(System.getProperty("user.dir") + path+slash+contents[j]);
+					File myObj = new File(direc+slash+contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -199,7 +200,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(System.getProperty("user.dir") + path+slash+contents[j]);
+					File myObj = new File(direc+slash+contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
