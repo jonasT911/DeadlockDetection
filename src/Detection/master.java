@@ -51,12 +51,12 @@ public class master {
 			System.out.println("Listing did not work");
 		}
 		for (int j = 0; j < contents.length; j++) {
-			// System.out.println(contents[j]);
+			System.out.println(System.getProperty("user.dir") + path+"\\"+contents[j]);
 			if (contents[j].contains(".java")) {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path+"\\"+contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -194,7 +194,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path+"\\"+contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -612,6 +612,7 @@ public class master {
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
 				currentFunction.visited = false;
+			//	numberOfRecursions--;
 			}
 			}
 
