@@ -34,7 +34,7 @@ public class master {
 		if (args.length == 0) {
 			path = "";
 		} else {
-			path = "\\" + args[0];
+			path = "/" + args[0];
 		}
 		System.out.println(System.getProperty("user.dir") + path + "/airplane");
 		File directoryPath = new File(System.getProperty("user.dir") + path + "/airplane");
@@ -56,7 +56,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path+"/" +contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -194,7 +194,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path+"/" +contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
