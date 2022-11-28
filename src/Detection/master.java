@@ -11,9 +11,21 @@ import java.util.Scanner;
 public class master {
 
 	static int numberOfRecursions;
+	
+	//Vars for recursion
+	static ArrayList<LockNode> SearchTree = new ArrayList<LockNode>();
+	static ArrayList<functionAction> program = new ArrayList<functionAction>();
+	static ArrayList<LockNode> temp=new ArrayList<LockNode>();
 
+	static ArrayList<LockNode> locksHeld = new ArrayList<LockNode>();
+
+	static 	ArrayList<lockEdge> listOfEdges= new ArrayList<lockEdge>();
+	static 	ArrayList<LockNode> oldLocks=new ArrayList<LockNode>();
+	static 	Map<String, String> VariableToClass = new HashMap<String, String>();
+	
+	
 	public static void main(String[] args) {
-		ArrayList<lockEdge> listOfEdges = new ArrayList<lockEdge>();
+	
 		// TODO Auto-generated method stub
 		boolean runnable = false;
 		System.out.println("Start Deadlock Detection");
@@ -28,7 +40,7 @@ public class master {
 
 		// STEP 1: Create list of all functions, as well as the functions called and the
 		// locks acquired.
-		ArrayList<functionAction> thisProgram = new ArrayList<functionAction>();
+		
 
 		String path;
 		if (args.length == 0) {
@@ -139,7 +151,7 @@ public class master {
 							}
 							if (openBrackets == 1) {
 
-								thisProgram.add(funct);
+								program.add(funct);
 							}
 						}
 						if (data.contains("synchronized")) {
@@ -179,27 +191,27 @@ public class master {
 
 		// prints the locks found
 		System.out.println("Locks found");
-		for (int i = 0; i < thisProgram.size(); i++) {
-			System.out.println(thisProgram.get(i).className + "." + thisProgram.get(i).functionName);
+		for (int i = 0; i < program.size(); i++) {
+			System.out.println(program.get(i).className + "." + program.get(i).functionName);
 			System.out.print("[");
-			for (int k = 0; k < thisProgram.get(i).locksAcquired.size(); k++) {
-				System.out.print(thisProgram.get(i).locksAcquired.get(k).lockName + ", ");
+			for (int k = 0; k < program.get(i).locksAcquired.size(); k++) {
+				System.out.print(program.get(i).locksAcquired.get(k).lockName + ", ");
 			}
 			System.out.println("]");
 			System.out.print("[");
-			for (int k = 0; k < thisProgram.get(i).functionsCalled.size(); k++) {
-				System.out.print(thisProgram.get(i).functionsCalled.get(k).functionName + ", ");
+			for (int k = 0; k < program.get(i).functionsCalled.size(); k++) {
+				System.out.print(program.get(i).functionsCalled.get(k).functionName + ", ");
 			}
 			System.out.println("]");
-			System.out.println("Passed args are " + thisProgram.get(i).passedArgs);
-			System.out.println("Is runnable: " + thisProgram.get(i).runnable);
+			System.out.println("Passed args are " + program.get(i).passedArgs);
+			System.out.println("Is runnable: " + program.get(i).runnable);
 
 		}
 
 		System.out.println(classList);
 		// Step 2
 		// Removed
-		Map<String, String> VariableToClass = new HashMap<String, String>();
+	
 		if (contents == null) {
 			System.out.println("Listing did not work");
 		}
@@ -308,10 +320,9 @@ public class master {
 		// name is found, replace it with the class.
 		// when lock name is same as existing lock node, add all held locks to the lcoks
 		// held list
-		ArrayList<LockNode> SearchTree = new ArrayList<LockNode>();
+		
 
-		traceExecution(SearchTree, thisProgram, new ArrayList<LockNode>(), mainFunction, listOfEdges,
-				new ArrayList<LockNode>(), VariableToClass);
+		traceExecution( mainFunction);//Only mainFunction stays
 		// TODO: CHange later to use first multithreaded function.
 
 		// Step 4 DFS to find cycles.
@@ -484,9 +495,7 @@ public class master {
 	 * After that the code examines all the functions that were called by the
 	 * current function.
 	 */
-	static void traceExecution(ArrayList<LockNode> SearchTree, ArrayList<functionAction> program,
-			ArrayList<LockNode> locksHeld, functionAction currentFunction, ArrayList<lockEdge> listOfEdges,
-			ArrayList<LockNode> oldLocks, Map<String, String> VariableToClass) {
+	static void traceExecution(functionAction currentFunction) {
 		// Pass list of functions, an arraylist of
 		// locks held while going into this function
 		// If a lock is held and another lock is acquired add that relation to the lock
@@ -606,7 +615,7 @@ public class master {
 					// System.out.println("New class is " + targetClass);
 				}
 
-				boolean foundFunction = nextFunct.equals(targetFunction); // && (nextClass.equals(targetClass));
+				boolean foundFunction = nextFunct.equals(targetFunction) && (nextClass.equals(targetClass));
 				boolean foundThread = ((program.get(j).functionName.equals("run")
 						&& currentFunction.functionsCalled.get(i).functionName.equals("start")));
 
@@ -630,11 +639,12 @@ public class master {
 				}
 
 				currentFunction.visited = true;
+				System.out.println("New locks " +locksAddedThisCycle);
+				System.out.println("Held locks " +locksHeld);
 				locksHeld.addAll(locksAddedThisCycle);
 				oldLocks.addAll(oldLocksAddedThisCycle);
 
-				traceExecution(SearchTree, program, locksHeld, program.get(location), listOfEdges, oldLocks,
-						VariableToClass);
+				traceExecution( program.get(location));
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
 				currentFunction.visited = false;
