@@ -155,8 +155,15 @@ public class master {
 							}
 						}
 						if (data.contains("synchronized")) {
+							System.out.println("New Lock at "+data);
 							String temp = data.substring(data.indexOf('(') + 1, data.indexOf(')'));
 							LockNode newLock = new LockNode(temp, openBrackets, contents[j], lineNumber);
+							
+							String functionName = temp.replace(" ", "");
+							if(temp.indexOf("synchronized")+12!=temp.indexOf("(")) {
+								System.out.println(temp.indexOf("synhronized")+12);
+								 newLock = new LockNode("this", openBrackets, contents[j], lineNumber);
+							}
 							// newLock.locksAcquiredWithin=locksCurrentlyHeld;//Change to add new lock lists
 							// on the
 							// locks currently held.
@@ -660,7 +667,7 @@ public class master {
 				traceExecution(program.get(location));
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
-				// currentFunction.visited = false;
+				currentFunction.visited = false;
 				// Right now I have this commented so that we dont look at already seen
 				// functions.
 
