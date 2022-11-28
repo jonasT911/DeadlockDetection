@@ -159,9 +159,9 @@ public class master {
 							String temp = data.substring(data.indexOf('(') + 1, data.indexOf(')'));
 							LockNode newLock = new LockNode(temp, openBrackets, contents[j], lineNumber);
 							
-							String functionName = temp.replace(" ", "");
-							if(temp.indexOf("synchronized")+12!=temp.indexOf("(")) {
-								System.out.println(temp.indexOf("synhronized")+12);
+							String functionName = data.replace(" ", "");
+							if(functionName.indexOf("synchronized")+12!=functionName.indexOf("(")) {
+								System.out.println(functionName.charAt(functionName.indexOf("synchronized")+12));
 								 newLock = new LockNode("this", openBrackets, contents[j], lineNumber);
 							}
 							// newLock.locksAcquiredWithin=locksCurrentlyHeld;//Change to add new lock lists
@@ -327,8 +327,13 @@ public class master {
 		// name is found, replace it with the class.
 		// when lock name is same as existing lock node, add all held locks to the lcoks
 		// held list
-
-		traceExecution(mainFunction);// Only mainFunction stays
+		ArrayList<functionAction> functsToExamine=new ArrayList<functionAction>();
+		functsToExamine.add(mainFunction);
+		while(functsToExamine.size()>0) {
+			traceExecution(functsToExamine.get(0));
+			functsToExamine.remove(0);
+		}
+		// Only mainFunction stays
 		// TODO: CHange later to use first multithreaded function.
 
 		// Step 4 DFS to find cycles.
