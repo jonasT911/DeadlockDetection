@@ -11,13 +11,8 @@ import java.util.Scanner;
 public class master {
 
 	static int numberOfRecursions;
-	public static String slash = "\\";
+	
 	public static void main(String[] args) {
-		String os = System.getProperty("os.name");
-//		System.out.println(os);
-		if(os.charAt(0) == 'M'){
-			slash = "/";
-		}
 		ArrayList<lockEdge> listOfEdges = new ArrayList<lockEdge>();
 		// TODO Auto-generated method stub
 		boolean runnable = false;
@@ -39,11 +34,10 @@ public class master {
 		if (args.length == 0) {
 			path = "";
 		} else {
-			path = slash + args[0];
+			path = "/" + args[0];
 		}
 		System.out.println(System.getProperty("user.dir") + path);
-		String direc = System.getProperty("user.dir") + path + "/alarm";
-		File directoryPath = new File(direc);
+		File directoryPath = new File(System.getProperty("user.dir") + path);
 
 		// List of all files and directories
 		if (directoryPath == null) {
@@ -57,12 +51,12 @@ public class master {
 			System.out.println("Listing did not work");
 		}
 		for (int j = 0; j < contents.length; j++) {
-			System.out.println(System.getProperty("user.dir") + path+slash+contents[j]);
+			// System.out.println(contents[j]);
 			if (contents[j].contains(".java")) {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(direc+slash+contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path+"/" +contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -200,7 +194,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(direc+slash+contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path+"/" +contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -618,7 +612,6 @@ public class master {
 				locksHeld.removeAll(locksAddedThisCycle);
 				oldLocks.removeAll(oldLocksAddedThisCycle);
 				currentFunction.visited = false;
-			//	numberOfRecursions--;
 			}
 			}
 
