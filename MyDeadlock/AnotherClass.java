@@ -9,7 +9,7 @@ public class AnotherClass {
 				for (int i = 0; i < repetitions; i++) {
 					sum++
 					;
-					ab(B,sum);
+					//ab(B,sum);
 
 				}
 			}

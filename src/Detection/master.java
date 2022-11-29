@@ -217,11 +217,7 @@ public class master {
 
 		System.out.println(classList);
 		// Step 2
-		// Removed
 
-		if (contents == null) {
-			System.out.println("Listing did not work");
-		}
 		for (int j = 0; j < contents.length; j++) {
 			// System.out.println(contents[j]);
 			if (contents[j].contains(".java")) {
@@ -308,6 +304,7 @@ public class master {
 						}
 
 					}
+					myReader.close();
 				} catch (FileNotFoundException e) {
 					System.out.println("An error occurred.");
 					e.printStackTrace();
@@ -327,9 +324,9 @@ public class master {
 		// name is found, replace it with the class.
 		// when lock name is same as existing lock node, add all held locks to the lcoks
 		// held list
-	
-			traceExecution(mainFunction);
-			//System.out.println("Final Search Tree is "+SearchTree);
+
+		traceExecution(mainFunction);
+		// System.out.println("Final Search Tree is "+SearchTree);
 		// Only mainFunction stays
 		// TODO: CHange later to use first multithreaded function.
 
@@ -349,11 +346,11 @@ public class master {
 		if (SearchTree.size() >= 2) {
 			if (isCycle(SearchTree.get(1), visited, recList)) {
 				System.out.println("DEADLOCK FOUND!!!!!");
-
+//				System.out.println("Rec list is " + recList);
 				for (int k = 0; k < recList.size() - 1; k++) {
 					for (int l = 0; l < listOfEdges.size(); l++) {
-						// System.out.println(recList.get(k).lockName+"
-						// "+listOfEdges.get(l).startingLock);
+//						System.out.print(recList.get(k).lockName + " " + listOfEdges.get(l).startingLock);
+//						System.out.println(" " + recList.get(k + 1).lockName + " " + listOfEdges.get(l).endingLock);
 						if (recList.get(k).lockName.equals(listOfEdges.get(l).startingLock)
 								&& (recList.get(k + 1).lockName.equals(listOfEdges.get(l).endingLock))) {
 							System.out.println(listOfEdges.get(l));
@@ -362,8 +359,8 @@ public class master {
 				}
 				// Check for final edge
 				for (int l = 0; l < listOfEdges.size(); l++) {
-					// System.out.println("Last "+recList.get(recList.size()-1).lockName+"
-					// "+listOfEdges.get(l).startingLock);
+//					System.out.println(
+//							"Last " + recList.get(recList.size() - 1).lockName + " " + listOfEdges.get(l).startingLock);
 					if (recList.get(recList.size() - 1).lockName.equals(listOfEdges.get(l).startingLock)
 							&& (recList.get(0).lockName.equals(listOfEdges.get(l).endingLock))) {
 						System.out.println(listOfEdges.get(l));
@@ -384,7 +381,8 @@ public class master {
 			visited.add(next);
 			recList.add(next);
 			for (int i = 0; i < next.locksAcquiredWithin.size(); i++) {
-				if (recList.contains(next.locksAcquiredWithin.get(i))) {
+
+				if (inRecList(next.locksAcquiredWithin.get(i).lockName, recList)) {
 
 					recList.add(next.locksAcquiredWithin.get(i));
 					return true;
@@ -399,6 +397,15 @@ public class master {
 		recList.remove(next);
 		return false;
 
+	}
+
+	static boolean inRecList(String name, ArrayList<LockNode> recList) {
+		for (int j = 0; j < recList.size(); j++) {
+			if (recList.get(j).lockName.equals(name)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	static boolean isFunctionDefinition(String data, int openBrackets) {
@@ -530,18 +537,20 @@ public class master {
 		System.out.println(currentFunction.className);
 		System.out.println(currentFunction.functionName);
 		System.out.println("Args " + currentFunction.passedArgs);
-		System.out.println("St " + SearchTree);
-		System.out.println(locksHeld);
-		//System.out.println("List of edges " + listOfEdges);
+//		System.out.println("St " + SearchTree);
+//		System.out.println(locksHeld);
+		// System.out.println("List of edges " + listOfEdges);
 		System.out.println("Next functions " + currentFunction.functionsCalled);
 
 		ArrayList<LockNode> locksAddedThisCycle = new ArrayList<LockNode>();
 		ArrayList<LockNode> oldLocksAddedThisCycle = new ArrayList<LockNode>();
-		listOfEdges.addAll(currentFunction.edgesMade);
+		for (int i = 0; i < currentFunction.edgesMade.size(); i++) {
+			addToEdgeList(currentFunction.edgesMade.get(i));
+		}
+
 		// Add locks to search tree
 		for (int i = 0; i < currentFunction.locksAcquired.size(); i++) {
 
-			
 			LockNode temp = currentFunction.locksAcquired.get(i);
 //			System.out.println(temp.lockName);
 //			System.out.println(temp.locksAcquiredWithin);
@@ -552,58 +561,59 @@ public class master {
 			oldLocksAddedThisCycle.add(temp);
 			// Maintains location of each dependency's location
 			for (int j = 0; j < oldLocks.size(); j++) {
-				listOfEdges.add(new lockEdge(oldLocks.get(j), temp));
+				addToEdgeList(new lockEdge(oldLocks.get(j), temp));
 
 			}
 
 			int location = -1;
 
-			System.out.print(newLock.lockName+" "+newLock.lockObj + " compare to ");
+			// System.out.print(newLock.lockName+" "+newLock.lockObj + " compare to ");
 			// Search for the acquired lock in the search tree
 			for (int j = 0; j < SearchTree.size(); j++) {
-				System.out.print( "| "+SearchTree.get(j).lockObj);
+				// System.out.print( "| "+SearchTree.get(j).lockObj);
 				if (SearchTree.get(j).lockObj.equals(newLock.lockObj)) {
 					location = j;
 				}
 			}
-			
-			System.out.println();
+
+			// System.out.println();
 			if (location != -1) {
 				// Lock is already in tree
 				// update the node
 				// System.out.println("Already found " + temp.lockName + " with size " +
 				// temp.locksAcquiredWithin.size());
 
-				if (SearchTree.get(location) != temp) {
-					for (int k = 0; k < temp.locksAcquiredWithin.size(); k++) {// For each held lock
-						boolean found = false;
-						
-						convertFromArg(newLock, currentFunction);
-						for (int j = 0; j < SearchTree.size(); j++) {// Check if the held lock is in the tree
-							if (SearchTree.get(j).lockObj.equals(newLock.lockObj)) {
-								// Held lock matches a node in the tree.
-								// System.out.println("Add held from search tree " +
-								// temp.locksAcquiredWithin.get(k).lockName);
-								found = true;
-								// Add the object from the tree
-								System.out.println("Add " + SearchTree.get(j));
-								// if()
-								SearchTree.get(location).locksAcquiredWithin.add(SearchTree.get(j));
+				int size = newLock.locksAcquiredWithin.size();
 
-							}
-						}
-						if (!found) {
-
-							// System.out.println("add new held temp " +
+				for (int k = 0; k < size; k++) {// For each held lock
+					boolean found = false;
+					LockNode newHeld = new LockNode(newLock.locksAcquiredWithin.get(k));
+					convertFromArg(newHeld, currentFunction);
+					for (int j = 0; j < SearchTree.size(); j++) {// Check if the held lock is in the tree
+						if (SearchTree.get(j).lockObj.equals(newHeld.lockObj)) {
+							// Held lock matches a node in the tree.
+							// System.out.println("Add held from search tree " +
 							// temp.locksAcquiredWithin.get(k).lockName);
+							found = true;
+							// Add the object from the tree
+							System.out.println("Add " + SearchTree.get(j));
+							// if()
+							SearchTree.get(location).locksAcquiredWithin.add(SearchTree.get(j));
 
-							// Otherwise add a new object to the held lock list
-							// System.out.println("Add to lock "+SearchTree.get(location)+" new lock
-							// "+temp.locksAcquiredWithin.get(k));
-							SearchTree.get(location).locksAcquiredWithin.add(newLock);
 						}
 					}
+					if (!found) {
+
+						// System.out.println("add new held temp " +
+						// temp.locksAcquiredWithin.get(k).lockName);
+
+						// Otherwise add a new object to the held lock list
+						// System.out.println("Add to lock "+SearchTree.get(location)+" new lock
+						// "+temp.locksAcquiredWithin.get(k));
+						SearchTree.get(location).locksAcquiredWithin.add(newHeld);
+					}
 				}
+
 				locksAddedThisCycle.add(SearchTree.get(location));
 				// Add the old lock to the locks acquired for all currently held locks
 				for (int k = 0; k < locksHeld.size(); k++) {
@@ -620,14 +630,14 @@ public class master {
 				for (int k = 0; k < locksHeld.size(); k++) {
 					locksHeld.get(k).locksAcquiredWithin.add(newLock);
 				}
-				for(int lockIterator =0;lockIterator<newLock.locksAcquiredWithin.size();lockIterator++) {
-					LockNode newHeld=new LockNode(newLock.locksAcquiredWithin.get(lockIterator));
+				for (int lockIterator = 0; lockIterator < newLock.locksAcquiredWithin.size(); lockIterator++) {
+					LockNode newHeld = new LockNode(newLock.locksAcquiredWithin.get(lockIterator));
 					convertFromArg(newHeld, currentFunction);
 					newLock.locksAcquiredWithin.remove(lockIterator);
-					newLock.locksAcquiredWithin.add(lockIterator,newHeld);
+					newLock.locksAcquiredWithin.add(lockIterator, newHeld);
 				}
 				locksAddedThisCycle.add(temp);
-				 System.out.println("ADD "+newLock);
+				System.out.println("ADD " + newLock);
 				SearchTree.add(newLock);
 			}
 		} // End lock for loop
@@ -663,8 +673,19 @@ public class master {
 					// TODO: Add that to the comparison.
 
 					// This is useful for propagating passed args
-					program.get(j).setArgs(currentFunction.functionsCalled.get(i).argsPassed);
-					program.get(j).updatePropagatedArgs(currentFunction);
+					System.out.println("old args" + currentFunction.functionsCalled.get(i).argsPassed);
+					// ArrayList<String> saveArgs=currentFunction.passedArgs;
+					if (program.get(j) != currentFunction) {
+						program.get(j).setArgs(currentFunction.functionsCalled.get(i).argsPassed);
+						program.get(j).updatePropagatedArgs(currentFunction);
+					} else {
+						System.out.println("Recursion update");
+						functionAction temp = new functionAction("fake", "fake", true);
+						temp.argsMapping = currentFunction.argsMapping;
+						temp.passedArgs = currentFunction.passedArgs;
+						program.get(j).setArgs(currentFunction.functionsCalled.get(i).argsPassed);
+						program.get(j).updatePropagatedArgs(temp);
+					}
 					System.out.println("New function args " + currentFunction.functionsCalled.get(i).argsPassed);
 					location = j;
 					break;
@@ -673,22 +694,23 @@ public class master {
 
 			System.out.println("List of edges " + listOfEdges);
 			if (location != -1) {
-				if (program.get(location).visited) {
-					System.out.println("Ive already been here\n");
+				if (program.get(location).visited > 0) {
+					System.out.println("Recursion Detected");
 					// This might need to change to more accurately capture converging threads.
 				} else {
 
-					currentFunction.visited = true;
-				
+					currentFunction.visited += 1;
+					System.out.println("Visited " + currentFunction.visited + " = " + program.get(location));
 					System.out.println("New locks " + locksAddedThisCycle);
 					System.out.println("Held locks " + locksHeld);
 					locksHeld.addAll(locksAddedThisCycle);
 					oldLocks.addAll(oldLocksAddedThisCycle);
 
-					traceExecution(program.get(location));//The locks acquired are the same as the previous function. Needs to be separate vars at first.
+					traceExecution(program.get(location));// The locks acquired are the same as the previous function.
+															// Needs to be separate vars at first.
 					locksHeld.removeAll(locksAddedThisCycle);
 					oldLocks.removeAll(oldLocksAddedThisCycle);
-					currentFunction.visited = false;
+					currentFunction.visited -= 1;
 					// Right now I have this commented so that we dont look at already seen
 					// functions.
 				}
@@ -702,12 +724,27 @@ public class master {
 			return;
 		}
 		if (temp.lockObj.charAt(0) >= '0' && temp.lockObj.charAt(0) <= '9') {
-			 System.out.println("Its an arg");
+			System.out.println("Its an arg");
 			int argIndex = Integer.parseInt(temp.lockObj);
-			 //Change lock to be this
-			 System.out.println(temp.lockName+" is now"+currentFunction.passedArgs.get(argIndex));
-			
+			// Change lock to be this
+			System.out.println(temp.lockName + " is now" + currentFunction.passedArgs.get(argIndex));
+
 			temp.lockObj = currentFunction.passedArgs.get(argIndex);
 		}
+	}
+
+	static void addToEdgeList(lockEdge newEdge) {
+		System.out.println("Adding new edge");
+		for (int i = 0; i < listOfEdges.size(); i++) {
+			lockEdge iterate = listOfEdges.get(i);
+
+			if (newEdge.startingLock.equals(iterate.startingLock) && newEdge.endingLock.equals(iterate.endingLock)
+					&& newEdge.startingLocation.equals(iterate.startingLocation)
+					&& newEdge.endingLocation.equals(iterate.endingLocation)) {
+				System.out.println("Match found\n");
+				return;
+			}
+		}
+		listOfEdges.add(newEdge);
 	}
 }

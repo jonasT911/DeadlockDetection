@@ -11,7 +11,7 @@ public class functionAction {
 	ArrayList<calledFunctions> functionsCalled;
 	ArrayList<lockEdge> edgesMade;
 	
-	boolean visited=false;
+	int visited=0;
 	boolean runnable=false;
 
 	public functionAction(String className, String functionName,boolean runnable) {
@@ -45,6 +45,7 @@ public class functionAction {
 	public void updatePropagatedArgs(functionAction currentFunction) {
 		for(int i=0; i<passedArgs.size();i++) {
 			for(int j=0; j<currentFunction.argsMapping.size();j++) {
+				System.out.println("Try Swap args "+currentFunction.passedArgs.get(j)+ " and "+passedArgs.get(i));
 				if(passedArgs.get(i).equals(currentFunction.argsMapping.get(j))) {
 					System.out.println("Swap args "+currentFunction.passedArgs.get(j)+ " and "+passedArgs.get(i));
 				//	passedArgs.remove(i);
