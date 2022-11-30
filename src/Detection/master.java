@@ -45,7 +45,7 @@ public class master {
 
 
 //		File directoryPath = new File(System.getProperty("user.dir") + path);
-		String direc = System.getProperty("user.dir") + path + slash +"alarm";
+		String direc = System.getProperty("user.dir") + path + slash +"clean";
 		File directoryPath = new File(direc);
 		System.out.println(direc);
 		// List of all files and directories
