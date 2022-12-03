@@ -112,7 +112,7 @@ public class master {
 						}
 						data = data.replace("\n", " ");
 						data = data.replace("\t", " ");
-						data = data.replace("  ", " ");
+						data = removeExtraSpaces(data);
 
 						// Data is now a full line of code from the file
 
@@ -254,7 +254,7 @@ public class master {
 						}
 						data = data.replace("\n", " ");
 						data = data.replace("\t", " ");
-						data = data.replace("  ", " ");
+						data = removeExtraSpaces(data);
 
 						// Check if the data contains the class as the type for a variable
 						// If it does, add the variable name and class as a mapping
@@ -409,10 +409,14 @@ public class master {
 	}
 
 	static boolean isFunctionDefinition(String data, int openBrackets) {
+
 		if (data.contains("(") && data.contains(")") && data.contains("{")) {
-			if (openBrackets == 1) {
+			// if (openBrackets == 1) {
+			if (!data.contains("=")) {
+				System.out.println(data + " is a function");
 				return true;
 			}
+			// }
 
 		}
 		return false;
@@ -448,7 +452,7 @@ public class master {
 		if (!(data.contains("(") && data.contains(")") && data.contains(";"))) {
 			return;
 		}
-		String temp = data.replace("  ", " ");
+		String temp = removeExtraSpaces(data);
 		temp = data.replace(" .", ".");
 		temp = data.replace(". ", ".");
 		temp = temp.replace("\t", "");
@@ -473,7 +477,7 @@ public class master {
 		String targetClass = "";
 
 		// Find the class this should be in.
-		System.out.println("Function is " + data);
+		// System.out.println("Function is " + data);
 		if (data.contains("new")) {
 			targetClass = temp.substring(leftIndex + 1, temp.indexOf('('));
 
@@ -746,5 +750,22 @@ public class master {
 			}
 		}
 		listOfEdges.add(newEdge);
+	}
+
+	static String removeExtraSpaces(String data) {
+		
+		String temp = data;
+		boolean wasSpace = false;
+		for (int i = 0; i < temp.length(); i++) {
+
+			while (i < temp.length() && wasSpace && temp.charAt(i) == ' ') {
+				temp = temp.substring(0, i) + temp.substring(i + 1);
+			}
+			if (i < temp.length())
+				wasSpace = (temp.charAt(i) == ' ');
+
+		}
+	
+		return temp;
 	}
 }
