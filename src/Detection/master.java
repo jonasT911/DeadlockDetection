@@ -72,6 +72,7 @@ public class master {
 					lineNumber = 0;
 					boolean hasMoreLines = true;
 					System.out.println("StartReading " + contents[j]);
+					int functionIndex=-1;
 					while (hasMoreLines) {
 
 						// Collects lines from the file into a single line of code.
@@ -132,8 +133,11 @@ public class master {
 
 							funct.setArgs(data.substring(data.indexOf('(') + 1, (data.indexOf(')'))));
 							// funct.locksAcquired.addAll(locksCurrentlyHeld);
+							functionIndex++;
+							program.add(functionIndex,funct);
 						}
 
+						// This can cause bugs if multiple brackets are on same line.
 						if (data.contains("{")) {
 							openBrackets++;
 						}
@@ -147,12 +151,10 @@ public class master {
 
 									// System.out.println("Removing lock "+temp.lockName);
 									// System.out.println(locksCurrentlyHeld.size());
+									funct=program.get(0);
 								}
 							}
-							if (openBrackets == 1) {
-
-								program.add(funct);
-							}
+						
 						}
 						if (data.contains("synchronized")) {
 							System.out.println("New Lock at " + data);
@@ -161,7 +163,8 @@ public class master {
 
 							String functionName = data.replace(" ", "");
 							if (functionName.indexOf("synchronized") + 12 != functionName.indexOf("(")) {
-								System.out.println(functionName.charAt(functionName.indexOf("synchronized") + 12));
+								// System.out.println(functionName.charAt(functionName.indexOf("synchronized") +
+								// 12));
 								newLock = new LockNode("this", openBrackets, contents[j], lineNumber);
 							}
 							// newLock.locksAcquiredWithin=locksCurrentlyHeld;//Change to add new lock lists
@@ -215,7 +218,7 @@ public class master {
 
 		}
 
-		System.out.println(classList);
+		System.out.println("\nClass list is "+classList);
 		// Step 2
 
 		for (int j = 0; j < contents.length; j++) {
@@ -410,13 +413,22 @@ public class master {
 
 	static boolean isFunctionDefinition(String data, int openBrackets) {
 
+		String temp = data;
 		if (data.contains("(") && data.contains(")") && data.contains("{")) {
-			// if (openBrackets == 1) {
-			if (!data.contains("=")) {
-				System.out.println(data + " is a function");
-				return true;
+			if (data.charAt(0) == ' ') {
+				temp = temp.substring(1);
 			}
-			// }
+
+			int distance = temp.indexOf("(") - (temp.indexOf("synchronized") + 12);
+
+			if (distance > 2) {
+				// if (openBrackets == 1) {
+				if (!data.contains("=")&&!data.contains(";")) {
+					System.out.println(data + " is a function");
+					return true;
+					// }
+				}
+			}
 
 		}
 		return false;
@@ -753,7 +765,7 @@ public class master {
 	}
 
 	static String removeExtraSpaces(String data) {
-		
+
 		String temp = data;
 		boolean wasSpace = false;
 		for (int i = 0; i < temp.length(); i++) {
@@ -765,7 +777,7 @@ public class master {
 				wasSpace = (temp.charAt(i) == ' ');
 
 		}
-	
+
 		return temp;
 	}
 }

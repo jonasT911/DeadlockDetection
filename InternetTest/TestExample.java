@@ -18,7 +18,7 @@ public class TestDeadlockExample1 {
     };  
   
     // t2 tries to lock resource2 then resource1  
-    Thread t2 = new Thread() {  
+    Thread t2 = new Thread() {//I think I can do something with thread to make sure it is treated as its own class.  
       public void run() {  
         synchronized (resource2) {  
           System.out.println("Thread 2: locked resource 2");  
