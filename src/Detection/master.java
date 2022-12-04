@@ -25,13 +25,6 @@ public class master {
 
 	public static void main(String[] args) {
 
-		String slash = "\\";
-		String os = System.getProperty("os.name");
-		//		System.out.println(os);
-		if(os.charAt(0) == 'M'){
-			slash = "/";
-		}
-
 		// TODO Auto-generated method stub
 		boolean runnable = false;
 		System.out.println("Start Deadlock Detection");
@@ -51,11 +44,10 @@ public class master {
 		if (args.length == 0) {
 			path = "";
 		} else {
-			path = slash + args[0];
+			path = "/" + args[0];
 		}
-		String direc = System.getProperty("user.dir") + path + slash +"d2";
-		File directoryPath = new File(direc);
-		System.out.println(direc);
+		System.out.println(System.getProperty("user.dir") + path);
+		File directoryPath = new File(System.getProperty("user.dir") + path);
 
 		// List of all files and directories
 		if (directoryPath == null) {
@@ -74,7 +66,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(directoryPath + slash + contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path + "/" + contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
@@ -235,7 +227,7 @@ public class master {
 
 				// Begin reading the file
 				try {
-					File myObj = new File(directoryPath + slash + contents[j]);
+					File myObj = new File(System.getProperty("user.dir") + path + "/" + contents[j]);
 					Scanner myReader = new Scanner(myObj);
 					locksCurrentlyHeld.clear();
 					lineNumber = 0;
