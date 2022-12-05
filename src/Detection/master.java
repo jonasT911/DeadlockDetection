@@ -32,7 +32,8 @@ public class master {
 		functionAction funct = new functionAction("Fake", "Fake", false);
 		functionAction mainFunction = new functionAction("Fake", "Fake", false);
 		ArrayList<String> classList = new ArrayList<String>();
-		String currentClass = "";
+		ArrayList<String> currentClass = new ArrayList<String>();
+		ArrayList<Integer> classLevel = new ArrayList<Integer>();
 		int lineNumber = 0;
 
 		ArrayList<LockNode> locksCurrentlyHeld = new ArrayList<LockNode>();
@@ -72,7 +73,7 @@ public class master {
 					lineNumber = 0;
 					boolean hasMoreLines = true;
 					System.out.println("StartReading " + contents[j]);
-					int functionIndex=-1;
+					int functionIndex = -1;
 					while (hasMoreLines) {
 
 						// Collects lines from the file into a single line of code.
@@ -114,27 +115,35 @@ public class master {
 						data = data.replace("\n", " ");
 						data = data.replace("\t", " ");
 						data = removeExtraSpaces(data);
-
+						//System.out.println("Data is |"+data);
 						// Data is now a full line of code from the file
 
 						String tempClass = getClassName(data, runnable);
 						if (tempClass != null) {
-							currentClass = tempClass;
-							classList.add(currentClass);
+							
+							// Records at what level the class was declared so that it can close it when the
+							// relevant bracket is closed
+							classLevel.add(openBrackets);
+							currentClass.add(tempClass);
+							classList.add(tempClass);
+						
 							if (data.contains("Runnable")) {
 								runnable = true;
 							} else {
 								runnable = false;
 							}
 						}
+
 						if (isFunctionDefinition(data, openBrackets)) {
-
-							funct = new functionAction(currentClass, getFunctionName(data), runnable);
-
+							System.out.println("New class list is "+currentClass);
+							funct = new functionAction(currentClass.get(currentClass.size() - 1), getFunctionName(data),
+									runnable);
+							System.out.println("Class is "+funct.className);
 							funct.setArgs(data.substring(data.indexOf('(') + 1, (data.indexOf(')'))));
 							// funct.locksAcquired.addAll(locksCurrentlyHeld);
 							functionIndex++;
-							program.add(functionIndex,funct);
+							program.add(functionIndex, funct);
+							funct.bracketLevel = openBrackets;
 						}
 
 						// This can cause bugs if multiple brackets are on same line.
@@ -149,12 +158,21 @@ public class master {
 								if (locksCurrentlyHeld.get(locksCurrentlyHeld.size() - 1).level >= openBrackets) {
 									locksCurrentlyHeld.remove(locksCurrentlyHeld.size() - 1);
 
-									// System.out.println("Removing lock "+temp.lockName);
-									// System.out.println(locksCurrentlyHeld.size());
-									funct=program.get(0);
 								}
+								if (funct.bracketLevel >= openBrackets) {
+									functionIndex--;
+									funct = program.get(functionIndex);
+								}	
+								
 							}
 						
+							if (classLevel.get(classLevel.size()-1) >= openBrackets) {
+								classLevel.remove(classLevel.size()-1);
+								currentClass.remove(currentClass.size()-1);
+							
+							}
+					
+
 						}
 						if (data.contains("synchronized")) {
 							System.out.println("New Lock at " + data);
@@ -200,10 +218,10 @@ public class master {
 		}
 
 		// prints the locks found
-		System.out.println("Locks found");
+		System.out.println("\nLocks found");
 		for (int i = 0; i < program.size(); i++) {
 			System.out.println(program.get(i).className + "." + program.get(i).functionName);
-			System.out.print("[");
+			System.out.print("Locks acquired [");
 			for (int k = 0; k < program.get(i).locksAcquired.size(); k++) {
 				System.out.print(program.get(i).locksAcquired.get(k).lockName + ", ");
 			}
@@ -218,7 +236,7 @@ public class master {
 
 		}
 
-		System.out.println("\nClass list is "+classList);
+		System.out.println("\nClass list is " + classList);
 		// Step 2
 
 		for (int j = 0; j < contents.length; j++) {
@@ -423,7 +441,7 @@ public class master {
 
 			if (distance > 2) {
 				// if (openBrackets == 1) {
-				if (!data.contains("=")&&!data.contains(";")) {
+				if (!data.contains("=") && !data.contains(";")) {
 					System.out.println(data + " is a function");
 					return true;
 					// }
@@ -446,6 +464,7 @@ public class master {
 			beginIndex--;
 
 		}
+		System.out.println("Function name is " + data.substring(beginIndex + 1, endIndex));
 		return data.substring(beginIndex + 1, endIndex);
 	}
 

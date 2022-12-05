@@ -11,6 +11,8 @@ public class functionAction {
 	ArrayList<calledFunctions> functionsCalled;
 	ArrayList<lockEdge> edgesMade;
 	
+	int bracketLevel=0;
+	
 	int visited=0;
 	boolean runnable=false;
 

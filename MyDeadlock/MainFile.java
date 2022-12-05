@@ -20,7 +20,7 @@ public class MainFile implements Runnable {
 			synchronized (B) {
 				for (int i = 0; i < repetitions; i++) {
 					sum++;
-					foo(A,B);
+					//foo(A,B);
 				}
 			}
 
@@ -49,7 +49,7 @@ public class MainFile implements Runnable {
 		// TODO Auto-generated method stub
 
 		for (int x = 0; x < 2; x++) {
-			//bar(lock1, lock2);
+			bar(lock1, lock2);
 			foo(lock1, lock2);
 			
 			
