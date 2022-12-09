@@ -24,6 +24,7 @@ public class master {
 	static Map<String, String> VariableToClass = new HashMap<String, String>();
 
 	public static void main(String[] args) {
+		long startTime = System.nanoTime();
 
 		// TODO Auto-generated method stub
 		boolean runnable = false;
@@ -86,7 +87,7 @@ public class master {
 
 								lineNumber++;
 								temp = myReader.nextLine();
-								// System.out.println(temp);
+								//System.out.println("TEMP |"+temp);
 								if (!isBlockComment || temp.contains("*/")) {
 									isBlockComment = false;
 
@@ -94,16 +95,23 @@ public class master {
 									if (commentIndex != -1) {
 										temp = temp.substring(0, commentIndex);
 									} else {
+
+										int blockComment = temp.indexOf("/*");
 										commentIndex = temp.indexOf("*/");
-										if (commentIndex != -1) {
+										if (blockComment != -1) {
+											if (commentIndex == -1) {
+												temp = temp.substring(0, blockComment);
+												isBlockComment = true;
+											} else {
+												System.out.println(commentIndex+ " and " + blockComment);
+												temp = temp.substring(0,blockComment)+temp.substring(commentIndex );
+												isBlockComment = false;
+											}
+										} else if (commentIndex != -1) {
 											temp = temp.substring(0, commentIndex);
 										}
 									}
-									int blockComment = temp.indexOf("/*");
-									if (blockComment != -1) {
-										temp = temp.substring(0, blockComment);
-										isBlockComment = true;
-									}
+
 									// System.out.println(temp + "was temp");
 									data = data.concat(temp);
 								}
@@ -115,11 +123,11 @@ public class master {
 						data = data.replace("\n", " ");
 						data = data.replace("\t", " ");
 						data = removeExtraSpaces(data);
-						// System.out.println("Data is |"+data);
+						//System.out.println("Data|"+data);
 						// Data is now a full line of code from the file
 
 						String tempClass = getClassName(data, runnable);
-						if (tempClass != null) {
+						if (tempClass != null&&!tempClass.contains("=")) {
 
 							// Records at what level the class was declared so that it can close it when the
 							// relevant bracket is closed
@@ -135,7 +143,7 @@ public class master {
 						}
 
 						if (isFunctionDefinition(data, openBrackets)) {
-							System.out.println("New class list is " + currentClass);
+							// System.out.println("New class list is " + currentClass);
 							funct = new functionAction(currentClass.get(currentClass.size() - 1), getFunctionName(data),
 									runnable);
 							System.out.println("Class is " + funct.className);
@@ -161,7 +169,11 @@ public class master {
 								}
 								if (funct.bracketLevel >= openBrackets) {
 									functionIndex--;
-									funct = program.get(functionIndex);
+									if (functionIndex >= 0) {
+										funct = program.get(functionIndex);
+									} else {
+										funct = null;
+									}
 								}
 
 							}
@@ -200,7 +212,7 @@ public class master {
 							// System.out.println(locksCurrentlyHeld.size());
 						}
 						addFunctionCall(data, funct, false, locksCurrentlyHeld);
-						if (funct.functionName.equals("main")) {
+						if (funct != null && funct.functionName.equals("main")) {
 							mainFunction = funct;
 
 						}
@@ -234,8 +246,8 @@ public class master {
 			System.out.println("Is runnable: " + program.get(i).runnable);
 
 		}
-
 		System.out.println("\nClass list is " + classList);
+
 		// Step 2
 
 		for (int j = 0; j < contents.length; j++) {
@@ -280,6 +292,8 @@ public class master {
 						// If it does, add the variable name and class as a mapping
 						// System.out.println("Line: " + data);
 						for (int i = 0; i < classList.size(); i++) {
+							String searchKey = classList.get(i) + " ";
+							 System.out.println(searchKey+"|"+data);
 							int location = data.indexOf(classList.get(i));
 							if (location != -1 && !data.contains(" class ")) {
 
@@ -299,14 +313,15 @@ public class master {
 									if (temp.contains(" ")) {
 										temp = temp.substring(0, temp.indexOf(" "));
 									}
-									// System.out.println(temp);
+									// System.out.println(temp+"|mapped to|"+classList.get(i));
 									VariableToClass.put(temp, classList.get(i));
 
 								} else {
 									// A non thread class variable is declared.
-									String temp = data.substring(location + classList.get(i).length() + 1);
+
+									String temp = data.substring(location + classList.get(i).length());
 									// System.out.println("CLASS NAME IS " + temp);
-									if (temp.indexOf(' ') != -1) {
+									if (temp.indexOf(' ') >0) {
 										temp = temp.substring(0, temp.indexOf(' '));
 									}
 									if (temp.indexOf('=') != -1) {
@@ -315,8 +330,8 @@ public class master {
 									if (temp.indexOf(';') != -1) {
 										temp = temp.substring(0, temp.indexOf(';'));
 									}
-									// System.out.println(temp);
-									VariableToClass.put(temp, classList.get(i));
+									 System.out.println(temp+"|mapped to|"+classList.get(i));
+									VariableToClass.put(temp.replace(" ", ""), classList.get(i));
 								}
 //								System.out.println("Found class name " + classList.get(i));
 //								System.out.println("Found class " + data);
@@ -363,34 +378,44 @@ public class master {
 
 		ArrayList<LockNode> visited = new ArrayList<LockNode>();
 		ArrayList<LockNode> recList = new ArrayList<LockNode>();
-		if (SearchTree.size() >= 2) {
-			if (isCycle(SearchTree.get(1), visited, recList)) {
-				System.out.println("DEADLOCK FOUND!!!!!");
+	//	if (SearchTree.size() >= 2) {
+
+			for (int i = 0; i < SearchTree.size(); i++) {
+				if (isCycle(SearchTree.get(i), visited, recList)) {
+					System.out.println("DEADLOCK FOUND!!!!!");
 //				System.out.println("Rec list is " + recList);
-				for (int k = 0; k < recList.size() - 1; k++) {
-					for (int l = 0; l < listOfEdges.size(); l++) {
+					for (int k = 0; k < recList.size() - 1; k++) {
+						for (int l = 0; l < listOfEdges.size(); l++) {
 //						System.out.print(recList.get(k).lockName + " " + listOfEdges.get(l).startingLock);
 //						System.out.println(" " + recList.get(k + 1).lockName + " " + listOfEdges.get(l).endingLock);
-						if (recList.get(k).lockName.equals(listOfEdges.get(l).startingLock)
-								&& (recList.get(k + 1).lockName.equals(listOfEdges.get(l).endingLock))) {
+							if (recList.get(k).lockName.equals(listOfEdges.get(l).startingLock)
+									&& (recList.get(k + 1).lockName.equals(listOfEdges.get(l).endingLock))) {
+								System.out.println(listOfEdges.get(l));
+							}
+						}
+					}
+					// Check for final edge
+					for (int l = 0; l < listOfEdges.size(); l++) {
+//					System.out.println(
+//							"Last " + recList.get(recList.size() - 1).lockName + " " + listOfEdges.get(l).startingLock);
+						if (recList.get(recList.size() - 1).lockName.equals(listOfEdges.get(l).startingLock)
+								&& (recList.get(0).lockName.equals(listOfEdges.get(l).endingLock))) {
 							System.out.println(listOfEdges.get(l));
 						}
 					}
+					System.out.println("DEADLOCK FOUND!!!!!");
+					break;
 				}
-				// Check for final edge
-				for (int l = 0; l < listOfEdges.size(); l++) {
-//					System.out.println(
-//							"Last " + recList.get(recList.size() - 1).lockName + " " + listOfEdges.get(l).startingLock);
-					if (recList.get(recList.size() - 1).lockName.equals(listOfEdges.get(l).startingLock)
-							&& (recList.get(0).lockName.equals(listOfEdges.get(l).endingLock))) {
-						System.out.println(listOfEdges.get(l));
-					}
-				}
-				System.out.println("DEADLOCK FOUND!!!!!");
 			}
-		}
+		//}else {
+		//	System.out.println(("Not enough locks"));
+		//}
+		long endTime = System.nanoTime();
 		System.out.println("Program Finished");
 
+		long executionTime = (endTime - startTime) / 1000000;
+
+		System.out.println("Took " + executionTime + " milliseconds");
 	}
 //End main function
 
@@ -463,7 +488,8 @@ public class master {
 			beginIndex--;
 
 		}
-		System.out.println("Function name is " + data.substring(beginIndex + 1, endIndex));
+		// System.out.println("Function name is " + data.substring(beginIndex + 1,
+		// endIndex));
 		return data.substring(beginIndex + 1, endIndex);
 	}
 
@@ -475,10 +501,12 @@ public class master {
 
 		String temp = data.substring(beginIndex + 6);
 		if (temp.contains(" ")) {
-			return temp.substring(0, temp.indexOf(' '));
-		} else {
-			return temp;
+			temp = temp.substring(0, temp.indexOf(' '));
 		}
+		if (temp.contains("{")) {
+			temp = temp.substring(0, temp.indexOf('{'));
+		}
+		return temp.replace(" ", "");
 	}
 
 	static void addFunctionCall(String data, functionAction funct, boolean isMultithreaded,
@@ -722,10 +750,11 @@ public class master {
 				String nextClass = program.get(j).className;
 				String nextFunct = program.get(j).functionName;
 
+				System.out.println("target class :"+targetClass);
 				if (VariableToClass.containsKey(targetClass)) {
-					// System.out.println("Founf" + targetClass);
+					System.out.println("Founf " + targetClass);
 					targetClass = VariableToClass.get(targetClass);
-					// System.out.println("New class is " + targetClass);
+					System.out.println("New class is " + targetClass);
 				}
 
 				boolean foundFunction = nextFunct.equals(targetFunction) && (nextClass.equals(targetClass));
@@ -738,9 +767,12 @@ public class master {
 
 					// This is useful for propagating passed args
 					System.out.println("old args" + currentFunction.functionsCalled.get(i).argsPassed);
+					
+					ArrayList<String> originalArgs = new ArrayList<String>();
 					// ArrayList<String> saveArgs=currentFunction.passedArgs;
 					if (program.get(j) != currentFunction) {
 						program.get(j).setArgs(currentFunction.functionsCalled.get(i).argsPassed);
+						originalArgs.addAll(program.get(j).passedArgs);
 						program.get(j).updatePropagatedArgs(currentFunction);
 					} else {
 						System.out.println("Recursion update");
@@ -748,8 +780,20 @@ public class master {
 						temp.argsMapping = currentFunction.argsMapping;
 						temp.passedArgs = currentFunction.passedArgs;
 						program.get(j).setArgs(currentFunction.functionsCalled.get(i).argsPassed);
+						originalArgs.addAll(program.get(j).passedArgs);
 						program.get(j).updatePropagatedArgs(temp);
 					}
+					
+					for(int l=0;l<program.get(j).passedArgs.size();l++) {
+						if (VariableToClass.containsKey(program.get(j).passedArgs.get(l))) {
+							System.out.println("Founf arg " + program.get(j).passedArgs.get(l));
+							String tempArg = VariableToClass.get(program.get(j).passedArgs.get(l));
+							VariableToClass.put(originalArgs.get(l), tempArg);
+							System.out.println(originalArgs.get(l)+ "|mapped to|"+tempArg);
+						}
+					}
+				
+					
 					System.out.println("New function args " + currentFunction.functionsCalled.get(i).argsPassed);
 					location = j;
 					break;
