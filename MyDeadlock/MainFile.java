@@ -50,7 +50,7 @@ public class MainFile implements Runnable {
 
 		for (int x = 0; x < 2; x++) {
 			bar(lock1, lock2);
-			foo(lock1, lock2);
+			garbage(lock1, lock2);
 			
 			
 		}

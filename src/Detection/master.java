@@ -115,18 +115,18 @@ public class master {
 						data = data.replace("\n", " ");
 						data = data.replace("\t", " ");
 						data = removeExtraSpaces(data);
-						//System.out.println("Data is |"+data);
+						// System.out.println("Data is |"+data);
 						// Data is now a full line of code from the file
 
 						String tempClass = getClassName(data, runnable);
 						if (tempClass != null) {
-							
+
 							// Records at what level the class was declared so that it can close it when the
 							// relevant bracket is closed
 							classLevel.add(openBrackets);
 							currentClass.add(tempClass);
 							classList.add(tempClass);
-						
+
 							if (data.contains("Runnable")) {
 								runnable = true;
 							} else {
@@ -135,10 +135,10 @@ public class master {
 						}
 
 						if (isFunctionDefinition(data, openBrackets)) {
-							System.out.println("New class list is "+currentClass);
+							System.out.println("New class list is " + currentClass);
 							funct = new functionAction(currentClass.get(currentClass.size() - 1), getFunctionName(data),
 									runnable);
-							System.out.println("Class is "+funct.className);
+							System.out.println("Class is " + funct.className);
 							funct.setArgs(data.substring(data.indexOf('(') + 1, (data.indexOf(')'))));
 							// funct.locksAcquired.addAll(locksCurrentlyHeld);
 							functionIndex++;
@@ -162,16 +162,15 @@ public class master {
 								if (funct.bracketLevel >= openBrackets) {
 									functionIndex--;
 									funct = program.get(functionIndex);
-								}	
-								
+								}
+
 							}
-						
-							if (classLevel.get(classLevel.size()-1) >= openBrackets) {
-								classLevel.remove(classLevel.size()-1);
-								currentClass.remove(currentClass.size()-1);
-							
+
+							if (classLevel.get(classLevel.size() - 1) >= openBrackets) {
+								classLevel.remove(classLevel.size() - 1);
+								currentClass.remove(currentClass.size() - 1);
+
 							}
-					
 
 						}
 						if (data.contains("synchronized")) {
@@ -200,7 +199,7 @@ public class master {
 							// System.out.println("Adding new lock " + newLock.lockName + newLock.level);
 							// System.out.println(locksCurrentlyHeld.size());
 						}
-						addFunctionCall(data, funct, false);
+						addFunctionCall(data, funct, false, locksCurrentlyHeld);
 						if (funct.functionName.equals("main")) {
 							mainFunction = funct;
 
@@ -475,10 +474,15 @@ public class master {
 		}
 
 		String temp = data.substring(beginIndex + 6);
-		return temp.substring(0, temp.indexOf(' '));
+		if (temp.contains(" ")) {
+			return temp.substring(0, temp.indexOf(' '));
+		} else {
+			return temp;
+		}
 	}
 
-	static void addFunctionCall(String data, functionAction funct, boolean isMultithreaded) {
+	static void addFunctionCall(String data, functionAction funct, boolean isMultithreaded,
+			ArrayList<LockNode> locksCurrentlyHeld) {
 
 		if (!(data.contains("(") && data.contains(")") && data.contains(";"))) {
 			return;
@@ -510,7 +514,17 @@ public class master {
 		// Find the class this should be in.
 		// System.out.println("Function is " + data);
 		if (data.contains("new")) {
-			targetClass = temp.substring(leftIndex + 1, temp.indexOf('('));
+			if (data.contains(".start()")) {
+				temp = temp.replace(" ", "");
+				System.out.println("Found a start thread " + data);
+				if (temp.contains(",")) {
+					targetClass = temp.substring(temp.indexOf('(') + 1, temp.indexOf(","));
+				} else {
+					targetClass = temp.substring(temp.indexOf('(') + 1, temp.indexOf(")"));
+				}
+			} else {
+				targetClass = temp.substring(leftIndex + 1, temp.indexOf('('));
+			}
 
 		} else if (leftIndex > 0 && temp.charAt(leftIndex) == '.') {
 
@@ -521,9 +535,22 @@ public class master {
 			targetClass = funct.className;
 		}
 
+		if (targetClass.equals("this")) {
+			targetClass = funct.className;
+		}
 		// Create a function with the target class and the passed args
 		calledFunctions out = new calledFunctions(temp.substring(leftIndex + 1, temp.indexOf('(')), targetClass,
 				isMultithreaded);
+
+		out.heldLocks.addAll(locksCurrentlyHeld);
+
+		if (data.contains("new Thread")) {
+			out.functionName = "start";
+			System.out.println("ITS A START");
+			out.argsPassed = "";
+			out.className.replace(" ", "");
+			funct.addFunction(out);
+		}
 
 		out.functionName.replace(" ", "");
 		if (out.functionName.equals("for") || out.functionName.equals("if")) {
@@ -531,7 +558,8 @@ public class master {
 			if (out.functionName.equals("Thread")) {
 				nextIsMultithreaded = true;
 			}
-			addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
+			addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded,
+					locksCurrentlyHeld);// Recursive
 			return;
 		}
 
@@ -548,7 +576,8 @@ public class master {
 				if (out.functionName.equals("Thread")) {
 					nextIsMultithreaded = true;
 				}
-				addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded);// Recursive
+				addFunctionCall(temp.substring(temp.indexOf('(') + 1, temp.length()), funct, nextIsMultithreaded,
+						locksCurrentlyHeld);// Recursive
 			}
 		}
 	}
@@ -648,8 +677,8 @@ public class master {
 						SearchTree.get(location).locksAcquiredWithin.add(newHeld);
 					}
 				}
+				replaceHeldLock(SearchTree.get(location), currentFunction.functionsCalled);
 
-				locksAddedThisCycle.add(SearchTree.get(location));
 				// Add the old lock to the locks acquired for all currently held locks
 				for (int k = 0; k < locksHeld.size(); k++) {
 					// System.out.println("ADD " + SearchTree.get(location).lockName + " to " +
@@ -671,7 +700,7 @@ public class master {
 					newLock.locksAcquiredWithin.remove(lockIterator);
 					newLock.locksAcquiredWithin.add(lockIterator, newHeld);
 				}
-				locksAddedThisCycle.add(temp);
+				replaceHeldLock(temp, currentFunction.functionsCalled);
 				System.out.println("ADD " + newLock);
 				SearchTree.add(newLock);
 			}
@@ -733,7 +762,7 @@ public class master {
 					System.out.println("Recursion Detected");
 					// This might need to change to more accurately capture converging threads.
 				} else {
-
+					locksAddedThisCycle = currentFunction.functionsCalled.get(i).heldLocks;
 					currentFunction.visited += 1;
 					System.out.println("Visited " + currentFunction.visited + " = " + program.get(location));
 					System.out.println("New locks " + locksAddedThisCycle);
@@ -798,5 +827,17 @@ public class master {
 		}
 
 		return temp;
+	}
+
+	static void replaceHeldLock(LockNode node, ArrayList<calledFunctions> functionsCalled) {
+		for (int i = 0; i < functionsCalled.size(); i++) {
+			for (int j = 0; j < functionsCalled.get(i).heldLocks.size(); j++) {
+				if (node.lockName.equals(functionsCalled.get(i).heldLocks.get(j).lockName)) {
+
+					functionsCalled.get(i).heldLocks.set(j, node);
+
+				}
+			}
+		}
 	}
 }
