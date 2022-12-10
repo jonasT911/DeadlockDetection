@@ -49,7 +49,7 @@ public class functionAction {
 			for(int j=0; j<currentFunction.argsMapping.size();j++) {
 				//System.out.println("Try Swap args "+currentFunction.passedArgs.get(j)+ " and "+passedArgs.get(i));
 				if(passedArgs.get(i).equals(currentFunction.argsMapping.get(j))) {
-					System.out.println("Swap args "+currentFunction.passedArgs.get(j)+ " and "+passedArgs.get(i));
+				//	System.out.println("Swap args "+currentFunction.passedArgs.get(j)+ " and "+passedArgs.get(i));
 				//	passedArgs.remove(i);
 					passedArgs.set(i,currentFunction.passedArgs.get(j));
 					
